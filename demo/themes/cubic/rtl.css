@@ -1,0 +1,63 @@
+/*
+Theme Name: Cubic
+
+Adding support for language written in a Right To Left (RTL) direction is easy -
+it's just a matter of overwriting all the horizontal positioning attributes
+of your CSS stylesheet in a separate stylesheet file named rtl.css.
+
+http://codex.wordpress.org/Right_to_Left_Language_Support
+*/
+
+/*--------------------------------------------------------------
+>>> TABLE OF CONTENTS:
+----------------------------------------------------------------
+1.0 Pagination
+2.0 Responsive
+	2.1 x <= 568px
+	2.2 x <= 1024px
+--------------------------------------------------------------*/
+
+/*--------------------------------------------------------------
+1.0 Pagination
+--------------------------------------------------------------*/
+.paging-navigation .nav-next,
+.paging-navigation .nav-previous {
+	float: left;
+}
+
+/*--------------------------------------------------------------
+2.0 Responsive
+--------------------------------------------------------------*/
+/*--------------------------------------------------------------
+2.1 x <= 568px
+--------------------------------------------------------------*/
+@media screen and (min-width: 568px) {
+	/* Content */
+	.archive .hentry,
+	.blog .hentry,
+	.search-results .hentry {
+		float: right;
+	}
+	.archive .hentry:nth-of-type(2n+3),
+	.blog .hentry:nth-of-type(2n+3),
+	.search-results .hentry:nth-of-type(2n+3) {
+		clear: right;
+	}
+}
+
+/*--------------------------------------------------------------
+2.2 x <= 1024px
+--------------------------------------------------------------*/
+@media screen and (min-width: 1024px) {
+	/* Content */
+	.archive .hentry:nth-of-type(2n+3),
+	.blog .hentry:nth-of-type(2n+3),
+	.search-results .hentry:nth-of-type(2n+3) {
+		clear: none;
+	}
+	.archive .hentry:nth-of-type(3n+4),
+	.blog .hentry:nth-of-type(3n+4),
+	.search-results .hentry:nth-of-type(3n+4) {
+		clear: right;
+	}
+}

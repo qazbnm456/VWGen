@@ -1,0 +1,9 @@
+# Ignore all tempfiles.
+/tmp
+
+# Ignore other unneeded files.
+*.swp
+*~
+.project
+.DS_Store
+.idea

@@ -1,0 +1,381 @@
+/*
+Theme Name: Cubic
+Template: boardwalk
+Theme URI: https://wordpress.com/themes/cubic/
+Author: Automattic
+Author URI: https://wordpress.com/themes/
+Description: A minimalistic square theme.
+Version: 1.0.4
+License: GNU General Public License
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: cubic
+Domain Path: /languages/
+Tags: light, blue, gray, white, one-column, responsive-layout, custom-menu, featured-images, post-formats, rtl-language-support, sticky-post, theme-options, translation-ready, holiday, photoblogging
+
+This theme, like WordPress, is licensed under the GPL.
+Use it to make something cool, have fun, and share what you've learned with others.
+
+(C) 2012-2015 Automattic, Inc.
+*/
+
+/*--------------------------------------------------------------
+>>> TABLE OF CONTENTS:
+----------------------------------------------------------------
+1.0 Colors
+2.0 Typography
+3.0 Layout
+4.0 Pagination
+5.0 Content
+6.0 Jetpack
+7.0 Responsive
+	7.1 x <= 568px
+	7.2 x <= 768px
+	7.3 x <= 1024px
+--------------------------------------------------------------*/
+
+/*--------------------------------------------------------------
+1.0 Colors
+--------------------------------------------------------------*/
+button,
+mark,
+input[type="button"],
+input[type="reset"],
+input[type="submit"],
+ins,
+.bypostauthor > .comment-body .fn,
+.comment #respond h3 small a,
+.comment-reply-title a,
+.filter-on .hentry.has-post-thumbnail:hover .entry-link,
+.hentry.color-1,
+.hentry.has-post-thumbnail .entry-link,
+.pace .pace-progress,
+.widget_tag_cloud a {
+	background: #10b0b8;
+}
+.hentry.color-2 {
+	background-color: #0e9ea5;
+}
+.hentry.color-3 {
+	background-color: #0d8d93;
+}
+.hentry.color-4 {
+	background-color: #0b7b80;
+}
+.hentry.color-5 {
+	background-color: #0a6a6e;
+}
+.hentry.color-1 + .hentry.color-1,
+.hentry.color-2 + .hentry.color-2,
+.hentry.color-3 + .hentry.color-3,
+.hentry.color-4 + .hentry.color-4,
+.hentry.color-5 + .hentry.color-5 {
+	background-color: #28b8bf;
+}
+.hentry.color-1 + .navigation + .hentry.color-1,
+.hentry.color-2 + .navigation + .hentry.color-2,
+.hentry.color-3 + .navigation + .hentry.color-3,
+.hentry.color-4 + .navigation + .hentry.color-4,
+.hentry.color-5 + .navigation + .hentry.color-5 {
+	background-color: #40c0c6;
+}
+a,
+#infinite-handle:hover,
+#infinite-handle:hover:before,
+.comment-author a:hover,
+.comment-author a:focus,
+.comment-author a:active,
+.dropdown-toggle:hover:after,
+.dropdown-toggle:focus:after,
+.dropdown-toggle:active:after,
+.entry-author .author-link a,
+.page-links > span,
+.page-links a:hover,
+.page-links a:focus,
+.page-links a:active,
+.paging-navigation a:hover,
+.paging-navigation a:focus,
+.paging-navigation a:active,
+.post-navigation a:hover,
+.post-navigation a:focus,
+.post-navigation a:active,
+.search-form.hover:before,
+.sidebar-toggle:hover,
+.sidebar-toggle:focus,
+.sidebar-toggle:active,
+.sidebar-toggle.toggle-on:hover,
+.sidebar-toggle.toggle-on:active,
+.site .wp-playlist-light .wp-playlist-playing,
+.site-title a:hover,
+.site-title a:focus,
+.site-title a:active,
+.social-navigation a:hover,
+.social-navigation a:focus,
+.social-navigation a:active,
+.widget-grofile .grofile-meta h4 a:hover,
+.widget-grofile .grofile-meta h4 a:hover,
+.widget-grofile .grofile-meta h4 a:active,
+.widget-title a:hover,
+.widget-title a:focus,
+.widget-title a:active,
+.widgettitle a:hover,
+.widgettitle a:focus,
+.widgettitle a:active {
+	color: #10b0b8;
+}
+
+/*--------------------------------------------------------------
+2.0 Typography
+--------------------------------------------------------------*/
+body,
+button,
+input,
+select,
+textarea {
+	font-family: 'Playfair Display', serif;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.comment-author,
+.hentry div#jp-relatedposts h3.jp-relatedposts-headline,
+.hentry div.sharedaddy h3.sd-title,
+.no-comments,
+.page-links {
+	font-family: Montserrat, sans-serif;
+	font-weight: normal;
+	text-transform: uppercase;
+	letter-spacing: 0.0625em;
+}
+h1 a,
+h2 a,
+h3 a,
+h4 a,
+h5 a,
+h6 a {
+	font-weight: normal;
+}
+.archive .taxonomy-description,
+.comment-reply-title small,
+.page-links > .page-links-title,
+.search-results .page-title span {
+	font-family: 'Playfair Display', serif;
+}
+
+/*--------------------------------------------------------------
+3.0 Layout
+--------------------------------------------------------------*/
+.next-link .site-main,
+.previous-link .site-main {
+	padding: 0 !important;
+}
+.site-description {
+	margin: 0.145em 0 -0.145em;
+	font-family: 'Playfair Display', serif;
+	line-height: 1.7142857;
+	font-weight: normal;
+	text-transform: none;
+	letter-spacing: 0;
+}
+.wf-active .site-description {
+	margin: 0;
+}
+
+/*--------------------------------------------------------------
+4.0 Pagination
+--------------------------------------------------------------*/
+.paging-navigation {
+	position: relative;
+	clear: both;
+	border-top: 1px solid #d9d9d9;
+}
+.paging-navigation:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 50%;
+	z-index: 1;
+	width: 1px;
+	height: 72px;
+	background: #d9d9d9;
+}
+.paging-navigation .nav-links {
+	height: 100%;
+}
+.paging-navigation .nav-next,
+.paging-navigation .nav-previous {
+	position: inherit;
+	left: 0;
+	overflow: hidden;
+	float: right;
+	width: 50%;
+	height: 72px;
+	border: 0 !important;
+}
+.paging-navigation .nav-next a:before,
+.paging-navigation .nav-previous a:before {
+	-webkit-transform: rotate(-90deg);
+	-moz-transform:    rotate(-90deg);
+	transform:         rotate(-90deg);
+}
+.paging-navigation a {
+	height: 72px;
+}
+
+/*--------------------------------------------------------------
+5.0 Content
+--------------------------------------------------------------*/
+/* Hentry */
+.archive .hentry,
+.blog .hentry,
+.search-results .hentry {
+	float: none;
+	padding: 0 0 100%;
+	margin: 0;
+	width: 100%;
+}
+.archive .hentry.has-post-thumbnail,
+.blog .hentry.has-post-thumbnail,
+.search-results .hentry.has-post-thumbnail {
+	background: #000;
+}
+
+/* Entry Header */
+.archive .entry-header,
+.blog .entry-header,
+.search-results .entry-header {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+}
+.entry-header {
+	max-height: 100%;
+	text-align: center;
+}
+.archive .entry-title,
+.blog .entry-title,
+.search-results .entry-title {
+	margin: 0 auto;
+	font-size: 1.375em;
+	line-height: 1.3636364;
+}
+
+/* Entry Thumbnail */
+.archive .hentry.has-post-thumbnail .attachment-boardwalk-featured-image,
+.blog .hentry.has-post-thumbnail .attachment-boardwalk-featured-image,
+.search-results .hentry.has-post-thumbnail .attachment-boardwalk-featured-image {
+	width: 100%;
+	max-width: 100%;
+	min-width: 100%;
+	height: auto;
+	max-height: initial;
+	min-height: initial;
+}
+
+/*--------------------------------------------------------------
+6.0 Jetpack
+--------------------------------------------------------------*/
+#infinite-handle {
+	position: inherit;
+	clear: both;
+	height: 73px;
+	width: 100%;
+	border: 0;
+	border-top: 1px solid #d9d9d9;
+}
+.site-main .infinite-loader {
+	position: inherit;
+	clear: both;
+}
+
+/*--------------------------------------------------------------
+7.0 Responsive
+--------------------------------------------------------------*/
+/*--------------------------------------------------------------
+7.1 x <= 568px
+--------------------------------------------------------------*/
+@media screen and (min-width: 568px) {
+	/* Content */
+	.archive .hentry,
+	.blog .hentry,
+	.search-results .hentry {
+		float: left;
+		padding-bottom: 50%;
+		width: 50%;
+	}
+	.archive .hentry:nth-of-type(2n+3),
+	.blog .hentry:nth-of-type(2n+3),
+	.search-results .hentry:nth-of-type(2n+3) {
+		clear: left;
+	}
+}
+
+/*--------------------------------------------------------------
+7.2 x <= 768px
+--------------------------------------------------------------*/
+@media screen and (min-width: 768px) {
+	/* Layout */
+	.archive .page-header,
+	.search-results .page-header,
+	.unfixed-header.archive:not(.sidebar-open) .page-header,
+	.unfixed-header.archive:not(.sidebar-open) .site-header,
+	.unfixed-header.blog:not(.sidebar-open) .site-header,
+	.unfixed-header.search-results:not(.sidebar-open) .page-header,
+	.unfixed-header.search-results:not(.sidebar-open) .site-header {
+		position: absolute;
+	}
+	.archive .site-footer,
+	.blog .site-footer,
+	.search-results .site-footer {
+		position: inherit;
+	}
+
+	/* Jetpack */
+	#infinite-handle:before {
+		-webkit-transform: none;
+		-moz-transform:    none;
+		transform:         none;
+	}
+	.site-main .infinite-loader {
+		width: 100%;
+		height: 73px;
+		border: 0;
+		border-top: 1px solid #d9d9d9;
+	}
+	.infinite-scroll.neverending .site-main .infinite-loader {
+		height: 49px;
+	}
+	.infinite-scroll.neverending .site-footer {
+		display: none;
+	}
+	.infinity-end.neverending .site-footer {
+		display: block;
+	}
+}
+
+/*--------------------------------------------------------------
+7.3 x <= 1024px
+--------------------------------------------------------------*/
+@media screen and (min-width: 1024px) {
+	/* Content */
+	.archive .hentry,
+	.blog .hentry,
+	.search-results .hentry {
+		padding-bottom: 33.3333%;
+		width: 33.3333%;
+	}
+	.archive .hentry:nth-of-type(2n+3),
+	.blog .hentry:nth-of-type(2n+3),
+	.search-results .hentry:nth-of-type(2n+3) {
+		clear: none;
+	}
+	.archive .hentry:nth-of-type(3n+4),
+	.blog .hentry:nth-of-type(3n+4),
+	.search-results .hentry:nth-of-type(3n+4) {
+		clear: left;
+	}
+}
