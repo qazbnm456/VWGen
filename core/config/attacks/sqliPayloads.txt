@@ -10,7 +10,7 @@
         },
         {
             "type"  : "JS function",
-            "vector" : "<?= var $condition = \"function() { if(this.last_name == '{0}') return true; }\"; $cUsers->findOne(array('$where' => $condition)))['last_name']; ?>"
+            "vector" : "<?php $inject = {0}; $condition = \"function() { if(this.last_name == '$inject') return true; }\"; echo $cUsers->findOne(array('$where' => $condition))['last_name']; ?>"
         }
     ],
     "revisable": true
