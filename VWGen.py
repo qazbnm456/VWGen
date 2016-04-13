@@ -1,3 +1,4 @@
+import platform
 import os
 import sys
 import optparse
@@ -6,8 +7,18 @@ import shutil
 import web
 from web import form
 import time
+
 from docker import Client
-from docker.utils import kwargs_from_env  # TLS problem, can be referenced from https://github.com/docker/machine/issues/1335
+if platform.system() == 'Darwin' or platform.system() == 'Windows':
+    from docker.utils import kwargs_from_env  # TLS problem, can be referenced from https://github.com/docker/machine/issues/1335
+    web.host = '192.168.99.100'
+    client = Client(base_url='tcp://{0}:2376'.format(web.host))
+    kwargs = kwargs_from_env()
+    kwargs['tls'].assert_hostname = False
+    client = Client(**kwargs)
+else:
+    web.host = '127.0.0.1'
+    client = Client(base_url='unix://var/run/docker.sock')
 
 parent_dir = os.path.abspath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), os.pardir))
@@ -18,11 +29,6 @@ THEME_DIR = os.path.dirname(sys.modules['demo'].__file__)
 
 demo = Demo()  # testing for now
 out = ''
-web.host = '192.168.99.100'
-client = Client(base_url='tcp://{0}:2376'.format(web.host))
-kwargs = kwargs_from_env()
-kwargs['tls'].assert_hostname = False
-client = Client(**kwargs)
 ctr = None
 
 class time_limit(object):
@@ -210,15 +216,26 @@ class index:
 
 if __name__ == "__main__":
     try:
-        p = optparse.OptionParser()
-        p.add_option('--test', '-t', help="the number of seed resources")
+        usage = "usage: %prog [options] arg1 arg2"
+        p = optparse.OptionParser(usage=usage)
+        p.add_option('--port', '-p',
+                    action="store", dest="port", type="int", default=8080,
+                    help="Configure the port this server to listen on")
+        p.add_option('--module', '-m',
+                    action="store", dest="modules", default=None, metavar='MODULES_LIST',
+                    help="List of modules to load")
+        p.add_option('--verbose', '-v',
+                    action="store", dest="verbosity", type="int", default=0, metavar='LEVEL',
+                    help="Set verbosity level")
+        p.add_option('--file',
+                    action="store", dest="source", type="string", default=None, metavar='FILENAME',
+                    help="Specify the file that VWGen will gonna operate on")
         options, arguments = p.parse_args()
 
         # set sys.argv to the remaining arguments after
         # everything consumed by optparse
-        if len(arguments) != 0:
-            sys.argv = arguments
-            web.source = sys.argv[0]
+        if options.source is not None:
+            web.source = options.source
 
             # This is not required if you've installed pycparser into
             # your site-packages/ with setup.py
@@ -231,8 +248,8 @@ if __name__ == "__main__":
                     cpp_args=['-E', r'-Iutils/fake_libc_include'])
 
             ast.show()
-        
-        app.run()
+
+        web.httpserver.runsimple(app.wsgifunc(), ("0.0.0.0", options.port))
     finally:
         from docker.errors import APIError
         print "\nClose..."
