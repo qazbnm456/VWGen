@@ -10,11 +10,21 @@
 	// Get the users collection
 	$cUsers = $db->users;
 	 
-	// Insert object
+	// Insert first object
 	$user = array(
 	    'first_name' => 'Su',
 	    'last_name' => 'Lobsiinvok',
 	    'roles' => array('developer','bugmaker')
+	);
+	 
+	// Insert this new document into the users collection
+	$cUsers->save($user);
+
+	// Insert second object
+	$user = array(
+	    'first_name' => 'Ad',
+	    'last_name' => 'Admin',
+	    'roles' => array('administrator', 'developer')
 	);
 	 
 	// Insert this new document into the users collection

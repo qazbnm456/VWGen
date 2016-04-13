@@ -1,7 +1,8 @@
 import os
 import sys
 
-modules = ["mod_unfilter", "mod_sqli"]
+modules = ["mod_unfilter", "mod_nosqli"]
+lists = ["mod_unfilter", "mod_sqli", "mod_nosqli"]
 
 class Attack(object):
     """

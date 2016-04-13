@@ -1,16 +1,11 @@
 {
     "preprocessing": {
-        "Mysql": "mysql.config.php",
-        "Mongodb": "mongodb.config.php"
+        "Mysql": "mysql.config.php"
     },
     "payloads"   : [
         {
-            "type"  : "array-binding query",
-            "vector" : "<?= $cUsers->findOne(array('last_name' => {0}))['last_name']; ?>"
-        },
-        {
-            "type"  : "JS function",
-            "vector" : "<?php $inject = {0}; $condition = \"function() { if(this.last_name == '$inject') return true; }\"; echo $cUsers->findOne(array('$where' => $condition))['last_name']; ?>"
+            "type"  : "",
+            "vector" : ""
         }
     ],
     "revisable": true
