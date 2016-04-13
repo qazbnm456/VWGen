@@ -165,7 +165,7 @@ class index:
                 web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point)],
                     host_config=web.client.create_host_config(
                         port_bindings={
-                            80: 80
+                            80: web.expose
                         },
                         binds={
                             "{0}".format(path): {
@@ -184,7 +184,7 @@ class index:
                 except: # For Python 3
                     import urllib.parse as urlparse
                     from urllib.parse import urlencode
-                url = ['http', '{0}'.format(web.host), '/', '', '', '']
+                url = ['http', '{0}:{1}'.format(web.host, web.expose), '/', '', '', '']
                 params = {}
 
                 for index, _ in enumerate(web.payloads['key']):
@@ -219,8 +219,11 @@ if __name__ == "__main__":
         usage = "usage: %prog [options] arg1 arg2"
         p = optparse.OptionParser(usage=usage)
         p.add_option('--port', '-p',
-                    action="store", dest="port", type="int", default=8080,
+                    action="store", dest="port", type="int", default=8080, metavar='PORT',
                     help="Configure the port this server to listen on")
+        p.add_option('--expose',
+                    action="store", dest="expose", type="int", default=80, metavar='PORT',
+                    help="Configure the port of the host for container binding")
         p.add_option('--module', '-m',
                     action="store", dest="modules", default=None, metavar='MODULES_LIST',
                     help="List of modules to load")
@@ -229,7 +232,7 @@ if __name__ == "__main__":
                     help="Set verbosity level")
         p.add_option('--file',
                     action="store", dest="source", type="string", default=None, metavar='FILENAME',
-                    help="Specify the file that VWGen will gonna operate on")
+                    help="[Not supported yet] Specify the file that VWGen will gonna operate on")
         options, arguments = p.parse_args()
 
         # set sys.argv to the remaining arguments after
@@ -249,6 +252,7 @@ if __name__ == "__main__":
 
             ast.show()
 
+        web.expose = options.expose
         web.httpserver.runsimple(app.wsgifunc(), ("0.0.0.0", options.port))
     finally:
         from docker.errors import APIError
