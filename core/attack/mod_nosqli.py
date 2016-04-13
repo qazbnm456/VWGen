@@ -9,7 +9,7 @@ import shutil
 class mod_nosqli(Attack):
     """This class implements a NOSQL-Injection vulnerabilities generator."""
 
-    name = "sqli"
+    name = "nosqli"
 
     payloads = []
     CONFIG_FILE = "nosqliPayloads.txt"
