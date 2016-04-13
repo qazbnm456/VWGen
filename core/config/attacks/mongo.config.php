@@ -1,6 +1,6 @@
 <?php
 	// Configuration
-	$dbhost = 'Mongodb';
+	$dbhost = 'Mongo';
 	$dbname = 'my_mongodb';
 	 
 	// Connect to mongo database
@@ -13,8 +13,7 @@
 	// Insert first object
 	$user = array(
 	    'first_name' => 'Su',
-	    'last_name' => 'Lobsiinvok',
-	    'roles' => array('developer','bugmaker')
+	    'last_name' => 'Lobsiinvok'
 	);
 	 
 	// Insert this new document into the users collection
@@ -23,8 +22,7 @@
 	// Insert second object
 	$user = array(
 	    'first_name' => 'Ad',
-	    'last_name' => 'Admin',
-	    'roles' => array('administrator', 'developer')
+	    'last_name' => 'Admin'
 	);
 	 
 	// Insert this new document into the users collection

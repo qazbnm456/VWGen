@@ -113,12 +113,21 @@ class VWGen(object):
             self.image = 'richarvey/nginx-php-fpm'
             self.mount_point = '/usr/share/nginx/html'
 
-    def setDBMS(self, DBMS="Mongodb"):
+    def setDBMS(self, DBMS):
         self.dbms = DBMS
-        web.dbms = ""
-        if self.dbms == 'Mongodb':
-            web.dbms = web.client.create_container(image='mongo', name='mongo_ctr')
-            web.client.start(web.dbms)
+        web.container_name = '{0}_ctr'.format(self.dbms)
+        if self.dbms is not None:
+            if self.dbms == 'Mysql':
+                web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
+                    environment={
+                        "MYSQL_ROOT_PASSWORD": "root_password",
+                        "MYSQL_DATABASE": "root_mysql"
+                    }
+                )
+                web.client.start(web.db_ctr)
+            elif self.dbms == 'Mongo':
+                web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
+                web.client.start(web.db_ctr)
 
 
     def setModules(self, options=""):
@@ -158,7 +167,7 @@ class index:
                 web.ctr = ctr
                 gen = VWGen(int(info[2]))
                 gen.setBackend()
-                gen.setDBMS()
+                gen.setDBMS(web.dbms)
                 gen._index__initThemeEnv()
                 [folder, path] = gen.generate()
                 web.path = path
@@ -173,7 +182,7 @@ class index:
                                 'mode': 'rw',
                             }
                         },
-                        links={ 'mongo_ctr': '{0}'.format(gen.dbms) } if gen.dbms is not None else None 
+                        links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
                     )
                 , name='VW')
                 web.client.start(web.ctr)
@@ -224,6 +233,9 @@ if __name__ == "__main__":
         p.add_option('--expose',
                     action="store", dest="expose", type="int", default=80, metavar='PORT',
                     help="Configure the port of the host for container binding")
+        p.add_option('--database',
+                    action="store", dest="dbms", type="string", default=None, metavar='DBMS',
+                    help="Configure the dbms for container linking")
         p.add_option('--module', '-m',
                     action="store", dest="modules", default=None, metavar='MODULES_LIST',
                     help="List of modules to load")
@@ -253,6 +265,7 @@ if __name__ == "__main__":
             ast.show()
 
         web.expose = options.expose
+        web.dbms = options.dbms
         web.httpserver.runsimple(app.wsgifunc(), ("0.0.0.0", options.port))
     finally:
         from docker.errors import APIError
@@ -260,13 +273,13 @@ if __name__ == "__main__":
         try:
             shutil.rmtree(web.path)
             try:
-                web.client.stop(web.dbms)
+                web.client.stop(web.db_ctr) if web.db_ctr is not None else None
                 web.client.stop(web.ctr)
             except APIError:
-                web.client.wait(web.dbms)
+                web.client.wait(web.db_ctr) if web.db_ctr is not None else None
                 web.client.wait(web.ctr)
             try:
-                web.client.remove_container(web.dbms, force=True)
+                web.client.remove_container(web.db_ctr, force=True) if web.db_ctr is not None else None
                 web.client.remove_container(web.ctr, force=True)
             except APIError:
                 pass

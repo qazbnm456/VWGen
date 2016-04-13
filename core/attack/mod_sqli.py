@@ -1,10 +1,11 @@
 from core.attack.attack import Attack
 from lxml import etree
-import random
 import os
 import re
+import sys
 import json
 import shutil
+import random
 
 class mod_sqli(Attack):
     """This class implements a SQL-Injection vulnerabilities generator."""
@@ -26,13 +27,16 @@ class mod_sqli(Attack):
 
     def doJob(self, http_res, backend, dbms):
         """This method do a Job."""
+        try:
+            for x in self.deps:
+                if x.name == "unfilter":
+                    payloads = x.doJob(http_res, backend, dbms)
 
-        for x in self.deps:
-            if x.name == "unfilter":
-                payloads = x.doJob(http_res, backend, dbms)
-
-        payloads = self.generate_payloads(payloads['html'], payloads)
-        payloads['dbconfig'] = self.findRequireFiles(backend, dbms)
+            payloads = self.generate_payloads(payloads['html'], payloads)
+            payloads['dbconfig'] = self.findRequireFiles(backend, dbms)
+        except:
+            self.logR("ERROR!! You might forget to set DBMS variable.")
+            sys.exit(0)
 
         return payloads
 
@@ -64,7 +68,7 @@ class mod_sqli(Attack):
             # <inject_point name="test" />
             found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[re:test(local-name(), '{0}', 'i')]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
             if len(found_node) == 1:
-                o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][0]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+                o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][random.randint(0, 1)]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
 
         payloads['html'] = "\n".join(o)
 

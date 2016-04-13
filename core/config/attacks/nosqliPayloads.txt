@@ -1,6 +1,6 @@
 {
     "preprocessing": {
-        "Mongodb": "mongodb.config.php"
+        "Mongo": "mongo.config.php"
     },
     "payloads"   : [
         {

@@ -1,10 +1,11 @@
 from core.attack.attack import Attack
 from lxml import etree
-import random
 import os
 import re
+import sys
 import json
 import shutil
+import random
 
 class mod_nosqli(Attack):
     """This class implements a NOSQL-Injection vulnerabilities generator."""
@@ -26,13 +27,16 @@ class mod_nosqli(Attack):
 
     def doJob(self, http_res, backend, dbms):
         """This method do a Job."""
+        try:
+            for x in self.deps:
+                if x.name == "unfilter":
+                    payloads = x.doJob(http_res, backend, dbms)
 
-        for x in self.deps:
-            if x.name == "unfilter":
-                payloads = x.doJob(http_res, backend, dbms)
-
-        payloads = self.generate_payloads(payloads['html'], payloads)
-        payloads['dbconfig'] = self.findRequireFiles(backend, dbms)
+            payloads = self.generate_payloads(payloads['html'], payloads)
+            payloads['dbconfig'] = self.findRequireFiles(backend, dbms)
+        except:
+            self.logR("ERROR!! You might forget to set DBMS variable.")
+            sys.exit(0)
 
         return payloads
 

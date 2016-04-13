@@ -1,7 +1,7 @@
 import os
 import sys
 
-modules = ["mod_unfilter", "mod_nosqli"]
+modules = ["mod_unfilter", "mod_sqli"]
 lists = ["mod_unfilter", "mod_sqli", "mod_nosqli"]
 
 class Attack(object):
@@ -44,7 +44,7 @@ class Attack(object):
 
         self.fingerprint_flag = False
 
-        # List of modules (objects) that must be launched before the current module
+        # List of modules (objects) that must be launched during the current module
         # Must be left empty in the code
         self.deps = []
 

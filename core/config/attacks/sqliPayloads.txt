@@ -4,8 +4,12 @@
     },
     "payloads"   : [
         {
-            "type"  : "select query",
-            "vector" : "<?=  ?>"
+            "type"  : "[UNION based] select query",
+            "vector" : "<?php $by = {0}; $sql = \"SELECT * FROM users WHERE last_name = '$by'\"; $result = mysql_query($sql) or die(\"Error with MySQL querying\"); $data = mysql_fetch_assoc($result); echo $data['last_name']; ?>"
+        },
+        {
+            "type"  : "[ERROR based] select query",
+            "vector" : "<?php $by = {0}; $sql = \"SELECT * FROM users WHERE last_name = '$by'\"; $result = mysql_query($sql) or die(mysql_error()); $data = mysql_fetch_assoc($result); echo $data['last_name']; ?>"
         }
     ]
 }
