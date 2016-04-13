@@ -4,9 +4,8 @@
     },
     "payloads"   : [
         {
-            "type"  : "",
-            "vector" : ""
+            "type"  : "select query",
+            "vector" : "<?=  ?>"
         }
-    ],
-    "revisable": true
+    ]
 }

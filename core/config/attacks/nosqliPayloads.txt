@@ -9,8 +9,7 @@
         },
         {
             "type"  : "JS function",
-            "vector" : "<?php $inject = {0}; $condition = \"function() { if(this.last_name == '$inject') return true; }\"; echo $cUsers->findOne(array('$where' => $condition))['last_name']; ?>"
+            "vector" : "<?php $inject = {0}; $condition = \"var data = db.users.findOne({ 'last_name': '$inject' }); return data;\"; $data = $db->execute($condition); echo $data['retval']['last_name']; ?>"
         }
-    ],
-    "revisable": true
+    ]
 }
