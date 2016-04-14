@@ -12,11 +12,14 @@ class mod_unfilter(Attack):
 
     payloads = []
     CONFIG_FILE = "unfilterPayloads.txt"
+    require = []
+    PRIORITY = 5
 
     def __init__(self):
         Attack.__init__(self)
         self.fd = open(os.path.join(self.CONFIG_DIR, self.CONFIG_FILE), "r+")
         self.payloads = json.load(self.fd)
+
 
     def doJob(self, http_res, backend, dbms):
         """This method do a Job."""
@@ -24,6 +27,7 @@ class mod_unfilter(Attack):
         payloads = self.generate_payloads(http_res)
 
         return payloads
+
 
     def study(self, etree_node, entries=[], lines=[]):
         for identifier in self.payloads['identifiers']:
@@ -58,6 +62,7 @@ class mod_unfilter(Attack):
                     d = {"type": "comment", "lineno": (node.getparent().getprevious().text.strip()) if (node.getprevious() is None) else (node.getprevious().text.strip()), "identifier": identifier}
                     if d not in entries:
                         entries.append(d)
+
 
     # Generate payloads based on what situations we met.
     def generate_payloads(self, html_code, payloads={}):

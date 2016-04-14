@@ -8,11 +8,18 @@ import web
 from web import form
 import time
 
+try:
+    import urlparse
+    from urllib import urlencode
+except: # For Python 3
+    import urllib.parse as urlparse
+    from urllib.parse import urlencode
+
 from docker import Client
 if platform.system() == 'Darwin' or platform.system() == 'Windows':
     from docker.utils import kwargs_from_env  # TLS problem, can be referenced from https://github.com/docker/machine/issues/1335
-    web.host = '192.168.99.100'
-    client = Client(base_url='tcp://{0}:2376'.format(web.host))
+    web.host = '{0}'.format(urlparse.urlparse(os.environ['DOCKER_HOST']).netloc.split(':')[0])
+    client = Client(base_url='{0}'.format(os.environ['DOCKER_HOST']))
     kwargs = kwargs_from_env()
     kwargs['tls'].assert_hostname = False
     client = Client(**kwargs)
@@ -63,9 +70,11 @@ class VWGen(object):
         self.options = None
         self.source = None
 
+
     def __initBackend(self):
         # Do Backend Environment Initialization
         self = self
+
 
     def _index__initThemeEnv(self):
         self.__initBackend()
@@ -73,6 +82,7 @@ class VWGen(object):
             z.extractall(self.output)
         with open(os.path.join(self.output, self.theme_name, "index.html"), 'rb') as src:
             self.source = src.read()
+
 
     def __initAttacks(self):
         from core.attack import attack
@@ -87,31 +97,82 @@ class VWGen(object):
             self.attacks.append(mod_instance)
             self.attacks.sort(lambda a, b: a.PRIORITY - b.PRIORITY)
 
+        # Custom list of modules was specified
+        if self.options is not None:
+            # First deactivate all modules
+            for attack_module in self.attacks:
+                attack_module.doReturn = False
+
+            opts = self.options.split(",")
+
+            for opt in opts:
+                if opt.strip() == "":
+                    continue
+
+                module = opt
+
+                # deactivate some module options
+                if module.startswith("-"):
+                    module = module[1:]
+                    if module == "all":
+                        for attack_module in self.attacks:
+                            if attack_module.name in attack.lists:
+                                attack_module.doReturn = False
+                    else:
+                        found = False
+                        for attack_module in self.attacks:
+                            if attack_module.name == module:
+                                found = True
+                                attack_module.doReturn = False
+                        if not found:
+                            print("[!] Unable to find a module named {0}".format(module))
+
+                # activate some module options
+                else:
+                    if module.startswith("+"):
+                        module = module[1:]
+                    else:
+                        module = self.default
+                    if module == "all":
+                        print("[!] Keyword 'all' was not safe enough for activating all modules at once. Specify modules names instead.")
+                    else:
+                        found = False
+                        for attack_module in self.attacks:
+                            if attack_module.name == module:
+                                found = True
+                                attack_module.doReturn = True
+                        if not found:
+                            print("[!] Unable to find a module named {0}".format(module))
+
+
     def generate(self):
         self.__initAttacks()
-        for x in self.attacks:
-            print('')
-            if x.require:
-                t = [y.name for y in self.attacks if y.name in x.require]
-                if x.require != t:
-                    print("[!] Missing dependencies for module {0}:".format(x.name))
-                    print(u"  {0}".format(",".join([y for y in x.require if y not in t])))
-                    continue
-                else:
+
+        deps = None
+        web.payloads = None
+        for index, x in enumerate(self.attacks):
+            if x.doReturn:
+                print('')
+                if x.require:
                     x.loadRequire([y for y in self.attacks if y.name in x.require])
+                    deps = ", ".join([y.name for y in self.attacks if y.name in x.require])
 
-            x.logG(u"[+] Launching module {0} and its deps: {1}".format(x.name, ",".join([y.name for y in self.attacks if y.name in x.require])))
-            
-            target_dir = os.path.join(self.output, self.theme_name)
-            web.payloads = x.Job(self.source, self.backend, self.dbms, target_dir)
+        for x in self.attacks:
+            if x.doReturn:
+                x.logG(u"[+] Launching module {0}".format(x.name))
+                x.logG(u"   and its deps: {0}".format(deps if deps is not None else 'x'))
+                target_dir = os.path.join(self.output, self.theme_name)
+                web.payloads = x.Job(self.source, self.backend, self.dbms, target_dir)
 
-            return [self.output, os.path.join(self.output, self.theme_name)]
+        return [self.output, os.path.join(self.output, self.theme_name)]
+
 
     def setBackend(self, backend="php"):
         self.backend = backend
         if self.backend == 'php':
             self.image = 'richarvey/nginx-php-fpm'
             self.mount_point = '/usr/share/nginx/html'
+
 
     def setDBMS(self, DBMS):
         self.dbms = DBMS
@@ -130,14 +191,13 @@ class VWGen(object):
                 web.client.start(web.db_ctr)
 
 
-    def setModules(self, options=""):
+    def setModules(self, options=None):
         self.options = options
 
 
 urls = (
     '/', 'index',
 )
-
 
 index_render = web.template.render('templates/')
 cubic_render = web.template.render('demo/cubic/')
@@ -147,11 +207,11 @@ myform = form.Form(
     form.Hidden(id='HH', name='hash', value='')
 )
 
-
 class index:
     def GET(self):
         form = myform()
         return index_render.index(form)
+
 
     def POST(self):
         web.header('Content-type', 'text/html')
@@ -168,6 +228,7 @@ class index:
                 gen = VWGen(int(info[2]))
                 gen.setBackend()
                 gen.setDBMS(web.dbms)
+                gen.setModules(web.modules)
                 gen._index__initThemeEnv()
                 [folder, path] = gen.generate()
                 web.path = path
@@ -187,17 +248,12 @@ class index:
                 , name='VW')
                 web.client.start(web.ctr)
 
-                try:
-                    import urlparse
-                    from urllib import urlencode
-                except: # For Python 3
-                    import urllib.parse as urlparse
-                    from urllib.parse import urlencode
                 url = ['http', '{0}:{1}'.format(web.host, web.expose), '/', '', '', '']
                 params = {}
 
-                for index, _ in enumerate(web.payloads['key']):
-                    params.update({'{0}'.format(web.payloads['key'][index]): '{0}'.format(web.payloads['value'][index])})
+                if web.payloads['key'] is not None:
+                    for index, _ in enumerate(web.payloads['key']):
+                        params.update({'{0}'.format(web.payloads['key'][index]): '{0}'.format(web.payloads['value'][index])})
 
                 query = params
 
@@ -266,6 +322,7 @@ if __name__ == "__main__":
 
         web.expose = options.expose
         web.dbms = options.dbms
+        web.modules = options.modules
         web.httpserver.runsimple(app.wsgifunc(), ("0.0.0.0", options.port))
     finally:
         from docker.errors import APIError

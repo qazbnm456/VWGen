@@ -1,8 +1,8 @@
 import os
 import sys
 
-modules = ["mod_unfilter", "mod_sqli"]
-lists = ["mod_unfilter", "mod_sqli", "mod_nosqli"]
+modules = ["mod_unfilter", "mod_sqli", "mod_nosqli"]
+default = "mod_unfilter"
 
 class Attack(object):
     """
@@ -48,11 +48,14 @@ class Attack(object):
         # Must be left empty in the code
         self.deps = []
 
+
     def setColor(self):
         self.color = 1
 
+
     def doJob(self, http_res, backend, dbms):
         return
+
 
     def final(self, payloads, target_dir):
         dst = open(os.path.join(target_dir, "index.php"), 'w')
@@ -61,8 +64,10 @@ class Attack(object):
         finally:
             dst.close()
 
+
     def loadRequire(self, obj=[]):
         self.deps = obj
+
 
     def log(self, fmt_string, *args):
         if len(args) == 0:
@@ -72,45 +77,54 @@ class Attack(object):
         if self.color:
             sys.stdout.write(self.STD)
 
+
     def logR(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.RED)
         self.log(fmt_string, *args)
+
 
     def logG(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.GREEN)
         self.log(fmt_string, *args)
 
+
     def logY(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.YELLOW)
         self.log(fmt_string, *args)
+
 
     def logC(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.CYAN)
         self.log(fmt_string, *args)
 
+
     def logW(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.GB)
         self.log(fmt_string, *args)
+
 
     def logM(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.MAGENTA)
         self.log(fmt_string, *args)
 
+
     def logB(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.BLUE)
         self.log(fmt_string, *args)
 
+
     def logO(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.ORANGE)
         self.log(fmt_string, *args)
+
 
     def Job(self, source, backend, dbms, target_dir):
         if self.doReturn == True:

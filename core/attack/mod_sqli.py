@@ -22,8 +22,10 @@ class mod_sqli(Attack):
         self.fd = open(os.path.join(self.CONFIG_DIR, self.CONFIG_FILE), "r+")
         self.payloads = json.load(self.fd)
 
+
     def findRequireFiles(self, backend, dbms):
         return self.payloads['preprocessing']['{0}'.format(dbms)]
+
 
     def doJob(self, http_res, backend, dbms):
         """This method do a Job."""
@@ -39,6 +41,7 @@ class mod_sqli(Attack):
             sys.exit(0)
 
         return payloads
+
 
     def study(self, etree_node, entries=[], lines=[]):
         for identifier in ["inject"]:
@@ -75,11 +78,13 @@ class mod_sqli(Attack):
         payloads['dbconfig']= ""
         return payloads
 
+
     def loadRequire(self, obj=[]):
         self.deps = obj
         for x in self.deps:
             if x.name == "unfilter":
                 x.doReturn = False
+
 
     def final(self, payloads, target_dir):
         dst = open(os.path.join(target_dir, "index.php"), 'w')
