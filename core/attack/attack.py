@@ -2,7 +2,7 @@ import os
 import sys
 
 modules = ["mod_unfilter", "mod_sqli", "mod_nosqli"]
-default = "mod_unfilter"
+default = "unfilter"
 
 class Attack(object):
     """

@@ -1,6 +1,7 @@
 import platform
 import os
 import sys
+import json
 import optparse
 import zipfile
 import shutil
@@ -16,6 +17,7 @@ except: # For Python 3
     from urllib.parse import urlencode
 
 from docker import Client
+from docker.errors import *
 if platform.system() == 'Darwin' or platform.system() == 'Windows':
     from docker.utils import kwargs_from_env  # TLS problem, can be referenced from https://github.com/docker/machine/issues/1335
     web.host = '{0}'.format(urlparse.urlparse(os.environ['DOCKER_HOST']).netloc.split(':')[0])
@@ -132,7 +134,7 @@ class VWGen(object):
                     if module.startswith("+"):
                         module = module[1:]
                     else:
-                        module = self.default
+                        module = attack.default
                     if module == "all":
                         print("[!] Keyword 'all' was not safe enough for activating all modules at once. Specify modules names instead.")
                     else:
@@ -179,15 +181,30 @@ class VWGen(object):
         web.container_name = '{0}_ctr'.format(self.dbms)
         if self.dbms is not None:
             if self.dbms == 'Mysql':
-                web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
-                    environment={
-                        "MYSQL_ROOT_PASSWORD": "root_password",
-                        "MYSQL_DATABASE": "root_mysql"
-                    }
-                )
+                try:
+                    web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
+                        environment={
+                            "MYSQL_ROOT_PASSWORD": "root_password",
+                            "MYSQL_DATABASE": "root_mysql"
+                        }
+                    )
+                except APIError:
+                    for line in web.client.pull('mysql', tag="latest", stream=True):
+                        print(json.dumps(json.loads(line), indent=4))
+                    web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
+                        environment={
+                            "MYSQL_ROOT_PASSWORD": "root_password",
+                            "MYSQL_DATABASE": "root_mysql"
+                        }
+                    )
                 web.client.start(web.db_ctr)
             elif self.dbms == 'Mongo':
-                web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
+                try:
+                    web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
+                except APIError:
+                    for line in web.client.pull('mongo', tag="latest", stream=True):
+                        print(json.dumps(json.loads(line), indent=4))
+                    web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
                 web.client.start(web.db_ctr)
 
 
@@ -232,20 +249,38 @@ class index:
                 gen._index__initThemeEnv()
                 [folder, path] = gen.generate()
                 web.path = path
-                web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point)],
-                    host_config=web.client.create_host_config(
-                        port_bindings={
-                            80: web.expose
-                        },
-                        binds={
-                            "{0}".format(path): {
-                                'bind': '{0}'.format(gen.mount_point),
-                                'mode': 'rw',
-                            }
-                        },
-                        links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
-                    )
-                , name='VW')
+                try:
+                    web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point)],
+                        host_config=web.client.create_host_config(
+                            port_bindings={
+                                80: web.expose
+                            },
+                            binds={
+                                "{0}".format(path): {
+                                    'bind': '{0}'.format(gen.mount_point),
+                                    'mode': 'rw',
+                                }
+                            },
+                            links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
+                        )
+                    , name='VW')
+                except APIError:
+                    for line in web.client.pull('{0}'.format(gen.image), tag="latest", stream=True):
+                        print(json.dumps(json.loads(line), indent=4))
+                    web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point)],
+                        host_config=web.client.create_host_config(
+                            port_bindings={
+                                80: web.expose
+                            },
+                            binds={
+                                "{0}".format(path): {
+                                    'bind': '{0}'.format(gen.mount_point),
+                                    'mode': 'rw',
+                                }
+                            },
+                            links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
+                        )
+                    , name='VW')
                 web.client.start(web.ctr)
 
                 url = ['http', '{0}:{1}'.format(web.host, web.expose), '/', '', '', '']
