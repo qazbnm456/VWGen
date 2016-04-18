@@ -7,14 +7,14 @@ import json
 import shutil
 import random
 
-class mod_sqli(Attack):
-    """This class implements a SQL-Injection vulnerabilities generator."""
+class mod_lfi(Attack):
+    """This class implements a Local File Inclusion vulnerabilities generator."""
 
-    name = "sqli"
+    name = "lfi"
 
     payloads = []
-    index = random.randint(0, 1)
-    CONFIG_FILE = "sqliPayloads.txt"
+    index = random.randint(2, 2)
+    CONFIG_FILE = "lfiPayloads.txt"
     require = ["unfilter"]
     PRIORITY = 4
 
@@ -25,7 +25,7 @@ class mod_sqli(Attack):
 
 
     def findRequireFiles(self, backend, dbms):
-        return self.payloads['preprocessing']['{0}'.format(dbms)]
+        return self.payloads['preprocessing']['{0}'.format(backend)]
 
 
     def doJob(self, http_res, backend, dbms):
@@ -36,9 +36,28 @@ class mod_sqli(Attack):
                     payloads = x.doJob(http_res, backend, dbms)
 
             payloads = self.generate_payloads(payloads['html'], payloads)
-            payloads['dbconfig'] = self.findRequireFiles(backend, dbms)
+            payloads['lficonfig'] = self.findRequireFiles(backend, dbms)
+
+            # some modules need installing when starting container
+            if self.payloads['payloads'][self.index]['restict']['deps']:
+                for dep in self.payloads['payloads'][self.index]['restict']['deps']:
+                    payloads['extra'][dep] = 1
+
+            if payloads['key'] is not None:
+                for index, _ in enumerate(payloads['key']):
+                    if self.payloads['payloads'][self.index]['restict']['include_value']:
+                        for restrict in self.payloads['payloads'][self.index]['restict']['include_value']:
+                            if restrict.startswith("-"):
+                                restrict = restrict[1:]
+                                payloads['value'][index] = payloads['lficonfig'][:payloads['lficonfig'].index(restrict)]
+                            else:
+                                restrict = restrict[1:]
+                                payloads['value'][index] = "".join(payloads['lficonfig'], restrict)
+                    else:
+                        payloads['value'][index] = payloads['lficonfig']
+
         except:
-            self.logR("ERROR!! You might forget to set DBMS variable.")
+            self.logR("ERROR!! You might forget to set Backend variable.")
             sys.exit(0)
 
         return payloads
@@ -76,7 +95,7 @@ class mod_sqli(Attack):
 
         payloads['html'] = "\n".join(o)
 
-        payloads['dbconfig']= ""
+        payloads['lficonfig']= ""
         return payloads
 
 
@@ -90,8 +109,22 @@ class mod_sqli(Attack):
     def final(self, payloads, target_dir):
         dst = open(os.path.join(target_dir, "index.php"), 'w')
         try:
-            dst.write('<?php require_once("{0}"); ?>\r\n{1}'.format(payloads['dbconfig'], payloads['html']))
+            dst.write(payloads['html'])
         finally:
             dst.close()
 
-        shutil.copy(os.path.join(self.CONFIG_DIR, payloads['dbconfig']), os.path.join(target_dir, payloads['dbconfig']))
+        with open(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), 'r') as f:
+            lines = f.readlines()
+
+        if self.payloads['payloads'][self.index]['restict']['php.ini']:
+            with open(os.path.join(target_dir, 'php.ini'), 'w') as f:
+                for line in lines:
+                    found = False
+                    for key, value in self.payloads['payloads'][self.index]['restict']['php.ini'].iteritems():
+                        if re.match(r'{0}'.format('^' + key + '(\s*=\s*).*'), line) and not found:
+                            found = True
+                            f.write(re.sub(r'{0}'.format('^' + key + '(\s*=\s*).*'), lambda m: "{0}{1}{2}".format(key, m.group(1), value), line, flags=re.IGNORECASE))
+                    if not found:
+                        f.write(line)
+
+        shutil.copy(os.path.join(self.CONFIG_DIR, payloads['lficonfig']), os.path.join(target_dir, payloads['lficonfig']))

@@ -259,10 +259,17 @@ class index:
                                 "{0}".format(path): {
                                     'bind': '{0}'.format(gen.mount_point),
                                     'mode': 'rw',
+                                },
+                                "{0}".format(os.path.join(path, 'php.ini')): {
+                                    'bind': '/etc/php5/cli/php.ini',
+                                    'mode': 'ro'
                                 }
                             },
                             links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
-                        )
+                        ),
+                        environment={
+                            "DEBS": "expect" if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
+                        }
                     , name='VW')
                 except APIError:
                     for line in web.client.pull('{0}'.format(gen.image), tag="latest", stream=True):
@@ -276,10 +283,17 @@ class index:
                                 "{0}".format(path): {
                                     'bind': '{0}'.format(gen.mount_point),
                                     'mode': 'rw',
+                                },
+                                "{0}".format(os.path.join(path, 'php.ini')): {
+                                    'bind': '/etc/php5/cli/php.ini',
+                                    'mode': 'ro'
                                 }
                             },
                             links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
-                        )
+                        ),
+                        environment={
+                            "DEBS": "expect" if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
+                        }
                     , name='VW')
                 web.client.start(web.ctr)
 
@@ -327,7 +341,7 @@ if __name__ == "__main__":
         p.add_option('--database',
                     action="store", dest="dbms", type="string", default=None, metavar='DBMS',
                     help="Configure the dbms for container linking")
-        p.add_option('--module', '-m',
+        p.add_option('--module',
                     action="store", dest="modules", default=None, metavar='MODULES_LIST',
                     help="List of modules to load")
         p.add_option('--verbose', '-v',

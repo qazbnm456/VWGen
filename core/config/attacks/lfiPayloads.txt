@@ -1,0 +1,49 @@
+{
+    "preprocessing": {
+        "php": "preview.php"
+    },
+    "payloads"   : [
+        {
+            "type"   : "classic lfi",
+            "vector" : "<?php require_once({0}); echo $name; ?>",
+            "restict": {
+                "php.ini": {},
+                "include_value": [],
+                "deps": []
+            }
+        },
+        {
+            "type"   : "classic lfi, but restrict the extension",
+            "vector" : "<?php require_once({0} . \".php\"); echo $name; ?>",
+            "restict": {
+                "php.ini": {},
+                "include_value": ["-.php"],
+                "deps": []
+            }
+        },
+        {
+            "type"   : "classic lfi, but with some options opened",
+            "vector" : "<?php require_once({0}); echo $name; ?>",
+            "restict": {
+                "php.ini": {
+                        "allow_url_fopen": "On",
+                        "allow_url_include": "On"
+                },
+                "include_value": [],
+                "deps": []
+            }
+        },
+        {
+            "type"   : "classic lfi, but with expect:// installed and some options opened",
+            "vector" : "<?php require_once({0}); echo $name; ?>",
+            "restict": {
+                "php.ini": {
+                        "allow_url_fopen": "On",
+                        "allow_url_include": "On"
+                },
+                "include_value": [],
+                "deps": ["expect"]
+            }
+        }
+    ]
+}

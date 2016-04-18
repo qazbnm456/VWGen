@@ -1,7 +1,7 @@
 import os
 import sys
 
-modules = ["mod_unfilter", "mod_sqli", "mod_nosqli"]
+modules = ["mod_unfilter", "mod_sqli", "mod_nosqli", "mod_lfi"]
 default = "unfilter"
 
 class Attack(object):

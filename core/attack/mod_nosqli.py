@@ -13,6 +13,7 @@ class mod_nosqli(Attack):
     name = "nosqli"
 
     payloads = []
+    index = random.randint(0, 1)
     CONFIG_FILE = "nosqliPayloads.txt"
     require = ["unfilter"]
     PRIORITY = 4
@@ -71,7 +72,7 @@ class mod_nosqli(Attack):
             # <inject_point name="test" />
             found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[re:test(local-name(), '{0}', 'i')]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
             if len(found_node) == 1:
-                o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][random.randint(0, 1)]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+                o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
 
         payloads['html'] = "\n".join(o)
 
