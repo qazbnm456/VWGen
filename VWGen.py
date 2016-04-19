@@ -261,7 +261,7 @@ class index:
                                     'mode': 'rw',
                                 },
                                 "{0}".format(os.path.join(path, 'php.ini')): {
-                                    'bind': '/etc/php5/cli/php.ini',
+                                    'bind': '/etc/php5/fpm/php.ini',
                                     'mode': 'ro'
                                 }
                             },
@@ -285,7 +285,7 @@ class index:
                                     'mode': 'rw',
                                 },
                                 "{0}".format(os.path.join(path, 'php.ini')): {
-                                    'bind': '/etc/php5/cli/php.ini',
+                                    'bind': '/etc/php5/fpm/php.ini',
                                     'mode': 'ro'
                                 }
                             },
