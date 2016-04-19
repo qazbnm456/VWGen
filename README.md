@@ -1,6 +1,6 @@
 # Vulnerable Web applications Generator
 
-This is the Git repo of the `VMGen`, which stands for *Vulnerable Web applications Generator*.
+This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applications Generator*.
 
 **Relevant links:**
  [Github](https://github.com/qazbnm456/VWGen)
