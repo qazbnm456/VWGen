@@ -95,3 +95,4 @@ class mod_sqli(Attack):
             dst.close()
 
         shutil.copy(os.path.join(self.CONFIG_DIR, payloads['dbconfig']), os.path.join(target_dir, payloads['dbconfig']))
+        shutil.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))

@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 
 modules = ["mod_unfilter", "mod_sqli", "mod_nosqli", "mod_lfi"]
 default = "unfilter"
@@ -63,6 +64,8 @@ class Attack(object):
             dst.write(payloads['html'])
         finally:
             dst.close()
+
+        shutil.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))
 
 
     def loadRequire(self, obj=[]):

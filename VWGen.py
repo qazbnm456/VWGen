@@ -256,20 +256,18 @@ class index:
                                 80: web.expose
                             },
                             binds={
-                                "{0}".format(path): {
+                                "{0}".format(web.path): {
                                     'bind': '{0}'.format(gen.mount_point),
                                     'mode': 'rw',
                                 },
-                                "{0}".format(os.path.join(path, 'php.ini')): {
+                                "{0}".format(os.path.join(web.path, 'php.ini')): {
                                     'bind': '/etc/php5/fpm/php.ini',
                                     'mode': 'ro'
                                 }
                             },
                             links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
                         ),
-                        environment={
-                            "DEBS": "expect" if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
-                        }
+                        environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
                     , name='VW')
                 except APIError:
                     for line in web.client.pull('{0}'.format(gen.image), tag="latest", stream=True):
@@ -280,20 +278,18 @@ class index:
                                 80: web.expose
                             },
                             binds={
-                                "{0}".format(path): {
+                                "{0}".format(web.path): {
                                     'bind': '{0}'.format(gen.mount_point),
                                     'mode': 'rw',
                                 },
-                                "{0}".format(os.path.join(path, 'php.ini')): {
+                                "{0}".format(os.path.join(web.path, 'php.ini')): {
                                     'bind': '/etc/php5/fpm/php.ini',
                                     'mode': 'ro'
                                 }
                             },
                             links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
                         ),
-                        environment={
-                            "DEBS": "expect" if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
-                        }
+                        environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
                     , name='VW')
                 web.client.start(web.ctr)
 
@@ -334,19 +330,19 @@ if __name__ == "__main__":
         p = optparse.OptionParser(usage=usage)
         p.add_option('--port', '-p',
                     action="store", dest="port", type="int", default=8080, metavar='PORT',
-                    help="Configure the port this server to listen on")
+                    help="Configure the port this server to listen on. Default is 8080.")
         p.add_option('--expose',
                     action="store", dest="expose", type="int", default=80, metavar='PORT',
-                    help="Configure the port of the host for container binding")
+                    help="Configure the port of the host for container binding. Default is 80.")
         p.add_option('--database',
                     action="store", dest="dbms", type="string", default=None, metavar='DBMS',
                     help="Configure the dbms for container linking")
         p.add_option('--module',
-                    action="store", dest="modules", default=None, metavar='MODULES_LIST',
-                    help="List of modules to load")
+                    action="store", dest="modules", default="+unfilter", metavar='MODULES_LIST',
+                    help="List of modules to load. Default is mod_unfilter.")
         p.add_option('--verbose', '-v',
                     action="store", dest="verbosity", type="int", default=0, metavar='LEVEL',
-                    help="Set verbosity level")
+                    help="[Not supported yet] Set verbosity level")
         p.add_option('--file',
                     action="store", dest="source", type="string", default=None, metavar='FILENAME',
                     help="[Not supported yet] Specify the file that VWGen will gonna operate on")
@@ -379,15 +375,13 @@ if __name__ == "__main__":
         try:
             shutil.rmtree(web.path)
             try:
-                web.client.stop(web.db_ctr) if web.db_ctr is not None else None
-                web.client.stop(web.ctr)
-            except APIError:
-                web.client.wait(web.db_ctr) if web.db_ctr is not None else None
-                web.client.wait(web.ctr)
-            try:
                 web.client.remove_container(web.db_ctr, force=True) if web.db_ctr is not None else None
                 web.client.remove_container(web.ctr, force=True)
             except APIError:
-                pass
+                web.client.wait(web.db_ctr) if web.db_ctr is not None else None
+                web.client.wait(web.ctr)
+                web.client.remove_container(web.db_ctr, force=True) if web.db_ctr is not None else None
+                web.client.remove_container(web.ctr, force=True)
+
         except AttributeError:
             pass

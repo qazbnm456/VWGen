@@ -13,7 +13,7 @@ class mod_lfi(Attack):
     name = "lfi"
 
     payloads = []
-    index = random.randint(0, 3)
+    index = random.randint(2, 2)
     CONFIG_FILE = "lfiPayloads.txt"
     require = ["unfilter"]
     PRIORITY = 4
