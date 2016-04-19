@@ -1,6 +1,6 @@
 {
     "preprocessing": {
-        "php": "preview.php"
+        "php": "info.php"
     },
     "payloads"   : [
         {

@@ -10,6 +10,10 @@
         {
             "type"  : "JS function",
             "vector" : "<?php $inject = {0}; $condition = \"var data = db.users.findOne({ 'last_name': '$inject' }); return data;\"; $data = $db->execute($condition); echo $data['retval']['last_name']; ?>"
+        },
+        {
+            "type"  : "JS function with $where",
+            "vector" : "<?php $inject = {0}; $condition = \"function() { if(this.last_name == '$inject') return true; }\"; $data = $cUsers->findOne(array('$where' => $condition)); echo $data['last_name']; ?>"
         }
     ]
 }

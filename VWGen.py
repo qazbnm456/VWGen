@@ -6,7 +6,6 @@ import optparse
 import zipfile
 import shutil
 import web
-from web import form
 import time
 
 try:
@@ -53,7 +52,6 @@ from demo.demo import Demo
 THEME_DIR = os.path.dirname(sys.modules['demo'].__file__)
 
 demo = Demo()  # testing for now
-out = ''
 ctr = None
 
 class time_limit(object):
@@ -78,7 +76,7 @@ class time_limit(object):
 
 class VWGen(object):
     def __init__(self, theme=None):
-        self.theme_name = "startbootstrap-clean-blog-1.0.3"  # testing for now
+        self.theme_name = "startbootstrap-agency-1.0.6"  # startbootstrap-clean-blog-1.0.4, startbootstrap-agency-1.0.6
         self.theme_path = os.path.join(THEME_DIR, "themes", self.theme_name)
         self.output = os.path.join(THEME_DIR, "output")
         self.backend = ""
@@ -231,24 +229,21 @@ if __name__ == "__main__":
     try:
         usage = "usage: %prog [options] arg1 arg2"
         p = optparse.OptionParser(usage=usage)
-        p.add_option('--port', '-p',
-                    action="store", dest="port", type="int", default=8080, metavar='PORT',
-                    help="Configure the port this server to listen on. Default is 8080.")
         p.add_option('--expose',
-                    action="store", dest="expose", type="int", default=80, metavar='PORT',
+                    action="store", dest="expose", type="int", default=80, metavar='EXPOSE_PORT',
                     help="Configure the port of the host for container binding. Default is 80.")
         p.add_option('--database',
                     action="store", dest="dbms", type="string", default=None, metavar='DBMS',
-                    help="Configure the dbms for container linking")
+                    help="Configure the dbms for container linking.")
         p.add_option('--module',
                     action="store", dest="modules", default="+unfilter", metavar='MODULES_LIST',
                     help="List of modules to load. Default is mod_unfilter.")
         p.add_option('--verbose', '-v',
                     action="store", dest="verbosity", type="int", default=0, metavar='LEVEL',
-                    help="[Not supported yet] Set verbosity level")
+                    help="[Not supported yet] Set verbosity level.")
         p.add_option('--file',
                     action="store", dest="source", type="string", default=None, metavar='FILENAME',
-                    help="[Not supported yet] Specify the file that VWGen will gonna operate on")
+                    help="[Not supported yet] Specify the file that VWGen will gonna operate on.")
         options, arguments = p.parse_args()
 
         # set sys.argv to the remaining arguments after
@@ -281,83 +276,84 @@ if __name__ == "__main__":
         gen._index__initThemeEnv()
         [folder, path] = gen.generate()
         web.path = path
-        try:
-            web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point)],
-                host_config=web.client.create_host_config(
-                    port_bindings={
-                        80: web.expose
-                    },
-                    binds={
-                        "{0}".format(web.path): {
-                            'bind': '{0}'.format(gen.mount_point),
-                            'mode': 'rw',
+        if web.payloads is not None:
+            try:
+                web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point), '/etc/php5/fpm/php.ini'],
+                    host_config=web.client.create_host_config(
+                        port_bindings={
+                            80: web.expose
                         },
-                        "{0}".format(os.path.join(web.path, 'php.ini')): {
-                            'bind': '/etc/php5/fpm/php.ini',
-                            'mode': 'ro'
-                        }
-                    },
-                    links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
-                ),
-                environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
-            , name='VW')
-        except APIError:
-            for line in web.client.pull('{0}'.format(gen.image), tag="latest", stream=True):
-                print(json.dumps(json.loads(line), indent=4))
-            web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point)],
-                host_config=web.client.create_host_config(
-                    port_bindings={
-                        80: web.expose
-                    },
-                    binds={
-                        "{0}".format(web.path): {
-                            'bind': '{0}'.format(gen.mount_point),
-                            'mode': 'rw',
+                        binds={
+                            "{0}".format(web.path): {
+                                'bind': '{0}'.format(gen.mount_point),
+                                'mode': 'rw',
+                            },
+                            "{0}".format(os.path.join(web.path, 'php.ini')): {
+                                'bind': '/etc/php5/fpm/php.ini',
+                                'mode': 'ro'
+                            }
                         },
-                        "{0}".format(os.path.join(web.path, 'php.ini')): {
-                            'bind': '/etc/php5/fpm/php.ini',
-                            'mode': 'ro'
-                        }
-                    },
-                    links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
-                ),
-                environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
-            , name='VW')
+                        links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
+                    ),
+                    environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
+                , name='VW')
+            except APIError:
+                for line in web.client.pull('{0}'.format(gen.image), tag="latest", stream=True):
+                    print(json.dumps(json.loads(line), indent=4))
+                web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point), '/etc/php5/fpm/php.ini'],
+                    host_config=web.client.create_host_config(
+                        port_bindings={
+                            80: web.expose
+                        },
+                        binds={
+                            "{0}".format(web.path): {
+                                'bind': '{0}'.format(gen.mount_point),
+                                'mode': 'rw',
+                            },
+                            "{0}".format(os.path.join(web.path, 'php.ini')): {
+                                'bind': '/etc/php5/fpm/php.ini',
+                                'mode': 'ro'
+                            }
+                        },
+                        links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
+                    ),
+                    environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
+                , name='VW')
 
-        web.client.start(web.ctr)
+            web.client.start(web.ctr)
 
-        url = ['http', '{0}:{1}'.format(web.host, web.expose), '/', '', '', '']
-        params = {}
+            url = ['http', '{0}:{1}'.format(web.host, web.expose), '/', '', '', '']
+            params = {}
 
-        if web.payloads['key'] is not None:
-            for index, _ in enumerate(web.payloads['key']):
-                params.update({'{0}'.format(web.payloads['key'][index]): '{0}'.format(web.payloads['value'][index])})
+            if web.payloads['key'] is not None:
+                for index, _ in enumerate(web.payloads['key']):
+                    params.update({'{0}'.format(web.payloads['key'][index]): '{0}'.format(web.payloads['value'][index])})
 
-        query = params
+            query = params
 
-        url[4] = urlencode(query)
+            url[4] = urlencode(query)
 
-        print "Browse: {0}".format(urlparse.urlunparse(url))
+            print "Browse: {0}".format(urlparse.urlunparse(url))
 
-        with time_limit(600) as t:
-            for line in web.client.logs(web.ctr, stderr=False, stream=True):
-                time.sleep(0.1)
-                print line
-                if t.timed_out:
-                    break
-                else:
-                    t.timed_reset
+            with time_limit(600) as t:
+                for line in web.client.logs(web.ctr, stderr=False, stream=True):
+                    time.sleep(0.1)
+                    print line
+                    if t.timed_out:
+                        break
+                    else:
+                        t.timed_reset
     except (KeyboardInterrupt, SystemExit, RuntimeError):
         print "Taking you to leave the program."
     except APIError as e:
-        x, y = e.args
-        print x + ": " + y
+        print "\n" + str(e.args[0])
         print "\nTaking you to safely leave the program."
     finally:
-        shutil.rmtree(web.path)
         try:
+            shutil.rmtree(web.path)
             web.client.remove_container(web.db_ctr, force=True) if web.db_ctr is not None else None
             web.client.remove_container(web.ctr, force=True)
+        except (TypeError, NullResource):
+            pass
         except APIError:
-            print "Some APIErrors found! You may need to remove containers  by yourself."
-        print "\nClose..."
+            print "Some APIErrors found! You may need to remove containers by yourself."

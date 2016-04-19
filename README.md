@@ -22,7 +22,7 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 
 1. Supporting very limited modules, such as [unfilter](https://www.owasp.org/index.php/Injection_Prevention_Cheat_Sheet), [SQLI](https://www.owasp.org/index.php/SQL_Injection), [NOSQLI](https://www.owasp.org/index.php/Testing_for_NoSQL_injection) and [LFI](https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion).
 
-2. Only one theme right now.
+2. Only two themes right now.
 
 3. Python3 is not supported!
 
@@ -30,10 +30,9 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 ## Install
 
 1. Install latest docker binary. Only version 1.11.0 supported. Check out official [installing guide](https://docs.docker.com/linux/).
-2. Install webpy: `pip install web.py --user`
-3. Install docker-py: `pip install docker-py --user`
-4. Install lxml: `sudo apt-get install python-lxml`
-5. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `python VWGen.py --help` for details.
+2. Install docker-py. `pip install docker-py --user`
+3. Install lxml. `sudo apt-get install python-lxml`
+4. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `python VWGen.py --help` or check below for details.
 
 <a name="instruction"></a>
 ## Instruction
@@ -42,17 +41,15 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 
 	Options:
 	  -h, --help            show this help message and exit
-	  -p PORT, --port=PORT  Configure the port this server to listen on. Default
-	                        is 8080.
-	  --expose=PORT         Configure the port of the host for container binding.
+	  --expose=EXPOSE_PORT  Configure the port of the host for container binding.
 	                        Default is 80.
-	  --database=DBMS       Configure the dbms for container linking
+	  --database=DBMS       Configure the dbms for container linking.
 	  --module=MODULES_LIST
 	                        List of modules to load. Default is mod_unfilter.
 	  -v LEVEL, --verbose=LEVEL
-	                        [Not supported yet] Set verbosity level
+	                        [Not supported yet] Set verbosity level.
 	  --file=FILENAME       [Not supported yet] Specify the file that VWGen will
-	                        gonna operate on
+	                        gonna operate on.
 
 <a name="contribute"></a>
 ## Contributing to VWGen

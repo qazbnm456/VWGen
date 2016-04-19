@@ -2,6 +2,7 @@
 /tmp
 
 # Ignore other unneeded files.
+*.pyc
 *.swp
 *~
 .project

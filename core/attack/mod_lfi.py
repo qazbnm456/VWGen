@@ -1,11 +1,32 @@
 from core.attack.attack import Attack
-from lxml import etree
 import os
 import re
 import sys
 import json
 import shutil
 import random
+
+try:
+    from lxml import etree
+except ImportError:
+    try:
+        # Python 2.5
+        import xml.etree.cElementTree as etree
+    except ImportError:
+        try:
+            # Python 2.5
+            import xml.etree.ElementTree as etree
+        except ImportError:
+            try:
+                # normal cElementTree install
+                import cElementTree as etree
+            except ImportError:
+                try:
+                    # normal ElementTree install
+                    import elementtree.ElementTree as etree
+                except ImportError:
+                    print("Failed to import ElementTree from any known place")
+                    sys.exit(0)
 
 class mod_lfi(Attack):
     """This class implements a Local File Inclusion vulnerabilities generator."""
