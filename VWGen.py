@@ -18,6 +18,22 @@ except: # For Python 3
 
 from docker import Client
 from docker.errors import *
+
+global client, ctr
+web.host           = None
+web.client         = None
+web.container_name = None
+web.ctr            = None
+web.db_ctr         = None
+web.source         = None
+web.payloads       = None
+web.path           = None
+
+web.expose         = None
+web.dbms           = None
+web.modules        = None
+web.dbms           = None
+
 if platform.system() == 'Darwin' or platform.system() == 'Windows':
     from docker.utils import kwargs_from_env  # TLS problem, can be referenced from https://github.com/docker/machine/issues/1335
     web.host = '{0}'.format(urlparse.urlparse(os.environ['DOCKER_HOST']).netloc.split(':')[0])
@@ -61,7 +77,7 @@ class time_limit(object):
 
 
 class VWGen(object):
-    def __init__(self, theme):
+    def __init__(self, theme=None):
         self.theme_name = "startbootstrap-clean-blog-1.0.3"  # testing for now
         self.theme_path = os.path.join(THEME_DIR, "themes", self.theme_name)
         self.output = os.path.join(THEME_DIR, "output")
@@ -151,7 +167,6 @@ class VWGen(object):
         self.__initAttacks()
 
         deps = None
-        web.payloads = None
         for index, x in enumerate(self.attacks):
             if x.doReturn:
                 print('')
@@ -212,118 +227,6 @@ class VWGen(object):
         self.options = options
 
 
-urls = (
-    '/', 'index',
-)
-
-index_render = web.template.render('templates/')
-cubic_render = web.template.render('demo/cubic/')
-app = web.application(urls, globals())
-
-myform = form.Form(
-    form.Hidden(id='HH', name='hash', value='')
-)
-
-class index:
-    def GET(self):
-        form = myform()
-        return index_render.index(form)
-
-
-    def POST(self):
-        web.header('Content-type', 'text/html')
-        web.header('Transfer-Encoding', 'chunked')
-        form = myform()
-        if not form.validates():
-            yield index_render.formtest(form)
-        else:
-            info = form['hash'].value.split('_')
-            try:
-                global client, ctr
-                web.client = client
-                web.ctr = ctr
-                gen = VWGen(int(info[2]))
-                gen.setBackend()
-                gen.setDBMS(web.dbms)
-                gen.setModules(web.modules)
-                gen._index__initThemeEnv()
-                [folder, path] = gen.generate()
-                web.path = path
-                try:
-                    web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point)],
-                        host_config=web.client.create_host_config(
-                            port_bindings={
-                                80: web.expose
-                            },
-                            binds={
-                                "{0}".format(web.path): {
-                                    'bind': '{0}'.format(gen.mount_point),
-                                    'mode': 'rw',
-                                },
-                                "{0}".format(os.path.join(web.path, 'php.ini')): {
-                                    'bind': '/etc/php5/fpm/php.ini',
-                                    'mode': 'ro'
-                                }
-                            },
-                            links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
-                        ),
-                        environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
-                    , name='VW')
-                except APIError:
-                    for line in web.client.pull('{0}'.format(gen.image), tag="latest", stream=True):
-                        print(json.dumps(json.loads(line), indent=4))
-                    web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point)],
-                        host_config=web.client.create_host_config(
-                            port_bindings={
-                                80: web.expose
-                            },
-                            binds={
-                                "{0}".format(web.path): {
-                                    'bind': '{0}'.format(gen.mount_point),
-                                    'mode': 'rw',
-                                },
-                                "{0}".format(os.path.join(web.path, 'php.ini')): {
-                                    'bind': '/etc/php5/fpm/php.ini',
-                                    'mode': 'ro'
-                                }
-                            },
-                            links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
-                        ),
-                        environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
-                    , name='VW')
-                web.client.start(web.ctr)
-
-                url = ['http', '{0}:{1}'.format(web.host, web.expose), '/', '', '', '']
-                params = {}
-
-                if web.payloads['key'] is not None:
-                    for index, _ in enumerate(web.payloads['key']):
-                        params.update({'{0}'.format(web.payloads['key'][index]): '{0}'.format(web.payloads['value'][index])})
-
-                query = params
-
-                url[4] = urlencode(query)
-
-                print "Browse: {0}".format(urlparse.urlunparse(url))
-
-                global out
-                with time_limit(5) as t:
-                    yield '<tt>'
-                    for line in web.client.logs(web.ctr, stderr=False, stream=True):
-                        # out += line
-                        # print line
-                        line = line.replace(" ", "&nbsp;")
-                        time.sleep(0.1)
-                        yield line + '</br>'
-                        if t.timed_out or "END" in line:
-                            break
-                        else:
-                            t.timed_reset
-                    yield '</tt>'
-            except SystemExit:
-                pass
-
-
 if __name__ == "__main__":
     try:
         usage = "usage: %prog [options] arg1 arg2"
@@ -368,20 +271,93 @@ if __name__ == "__main__":
         web.expose = options.expose
         web.dbms = options.dbms
         web.modules = options.modules
-        web.httpserver.runsimple(app.wsgifunc(), ("0.0.0.0", options.port))
-    finally:
-        from docker.errors import APIError
-        print "\nClose..."
-        try:
-            shutil.rmtree(web.path)
-            try:
-                web.client.remove_container(web.db_ctr, force=True) if web.db_ctr is not None else None
-                web.client.remove_container(web.ctr, force=True)
-            except APIError:
-                web.client.wait(web.db_ctr) if web.db_ctr is not None else None
-                web.client.wait(web.ctr)
-                web.client.remove_container(web.db_ctr, force=True) if web.db_ctr is not None else None
-                web.client.remove_container(web.ctr, force=True)
 
-        except AttributeError:
-            pass
+        web.client = client
+        web.ctr = ctr
+        gen = VWGen()
+        gen.setBackend()
+        gen.setDBMS(web.dbms)
+        gen.setModules(web.modules)
+        gen._index__initThemeEnv()
+        [folder, path] = gen.generate()
+        web.path = path
+        try:
+            web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point)],
+                host_config=web.client.create_host_config(
+                    port_bindings={
+                        80: web.expose
+                    },
+                    binds={
+                        "{0}".format(web.path): {
+                            'bind': '{0}'.format(gen.mount_point),
+                            'mode': 'rw',
+                        },
+                        "{0}".format(os.path.join(web.path, 'php.ini')): {
+                            'bind': '/etc/php5/fpm/php.ini',
+                            'mode': 'ro'
+                        }
+                    },
+                    links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
+                ),
+                environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
+            , name='VW')
+        except APIError:
+            for line in web.client.pull('{0}'.format(gen.image), tag="latest", stream=True):
+                print(json.dumps(json.loads(line), indent=4))
+            web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point)],
+                host_config=web.client.create_host_config(
+                    port_bindings={
+                        80: web.expose
+                    },
+                    binds={
+                        "{0}".format(web.path): {
+                            'bind': '{0}'.format(gen.mount_point),
+                            'mode': 'rw',
+                        },
+                        "{0}".format(os.path.join(web.path, 'php.ini')): {
+                            'bind': '/etc/php5/fpm/php.ini',
+                            'mode': 'ro'
+                        }
+                    },
+                    links={ '{0}'.format(web.container_name): '{0}'.format(gen.dbms) } if gen.dbms is not None else None
+                ),
+                environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
+            , name='VW')
+
+        web.client.start(web.ctr)
+
+        url = ['http', '{0}:{1}'.format(web.host, web.expose), '/', '', '', '']
+        params = {}
+
+        if web.payloads['key'] is not None:
+            for index, _ in enumerate(web.payloads['key']):
+                params.update({'{0}'.format(web.payloads['key'][index]): '{0}'.format(web.payloads['value'][index])})
+
+        query = params
+
+        url[4] = urlencode(query)
+
+        print "Browse: {0}".format(urlparse.urlunparse(url))
+
+        with time_limit(600) as t:
+            for line in web.client.logs(web.ctr, stderr=False, stream=True):
+                time.sleep(0.1)
+                print line
+                if t.timed_out:
+                    break
+                else:
+                    t.timed_reset
+    except (KeyboardInterrupt, SystemExit, RuntimeError):
+        print "Taking you to leave the program."
+    except APIError as e:
+        x, y = e.args
+        print x + ": " + y
+        print "\nTaking you to safely leave the program."
+    finally:
+        shutil.rmtree(web.path)
+        try:
+            web.client.remove_container(web.db_ctr, force=True) if web.db_ctr is not None else None
+            web.client.remove_container(web.ctr, force=True)
+        except APIError:
+            print "Some APIErrors found! You may need to remove containers  by yourself."
+        print "\nClose..."
