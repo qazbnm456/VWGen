@@ -7,6 +7,7 @@ import zipfile
 import shutil
 import web
 import time
+from blessed import Terminal
 
 try:
     import urlparse
@@ -33,6 +34,48 @@ web.dbms           = None
 web.modules        = None
 web.dbms           = None
 
+
+class Logger(object):
+
+    # Color codes
+    STD = "\033[0;0m"
+    BLUE = "\033[1;34m"
+    RED = "\033[0;31m"
+    GREEN = "\033[0;32m"
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def log(self, fmt_string, *args):
+        if len(args) == 0:
+            print(fmt_string)
+        else:
+            print(fmt_string.format(*args))
+        sys.stdout.write(self.STD)
+
+
+    @classmethod
+    def logInfo(self, fmt_string, *args):
+        sys.stdout.write(self.BLUE)
+        self.log(fmt_string, *args)
+        sys.stdout.write(self.STD)
+
+
+    @classmethod
+    def logError(self, fmt_string, *args):
+        sys.stdout.write(self.RED)
+        self.log(fmt_string, *args)
+        sys.stdout.write(self.STD)
+
+
+    @classmethod
+    def logSuccess(self, fmt_string, *args):
+        sys.stdout.write(self.GREEN)
+        self.log(fmt_string, *args)
+        sys.stdout.write(self.STD)
+
+
 if platform.system() == 'Darwin' or platform.system() == 'Windows':
     try:
         from docker.utils import kwargs_from_env  # TLS problem, can be referenced from https://github.com/docker/machine/issues/1335
@@ -45,11 +88,33 @@ if platform.system() == 'Darwin' or platform.system() == 'Windows':
         web.host = '127.0.0.1'
         client = Client(base_url='unix://var/run/docker.sock')
     except:
-        print "$DOCKER_HOST variable undefined! Exit..."
+        Logger.logError("[ERROR] $DOCKER_HOST variable undefined! Exit...")
         sys.exit(1)
 else:
     web.host = '127.0.0.1'
     client = Client(base_url='unix://var/run/docker.sock')
+
+
+class switch(object):
+    def __init__(self, value):
+        self.value = value
+        self.fall = False
+ 
+    def __iter__(self):
+        """Return the match method once, then stop"""
+        yield self.match
+        raise StopIteration
+     
+    def match(self, *args):
+        """Indicate whether or not to enter a case suite"""
+        if self.fall or not args:
+            return True
+        elif self.value in args: # changed for v1.5, see below
+            self.fall = True
+            return True
+        else:
+            return False
+
 
 parent_dir = os.path.abspath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), os.pardir))
@@ -82,7 +147,9 @@ class time_limit(object):
 
 
 class VWGen(object):
+
     def __init__(self, theme=None):
+        self.color = 0
         self.theme_name = "startbootstrap-agency-1.0.6"  # startbootstrap-clean-blog-1.0.4, startbootstrap-agency-1.0.6
         self.theme_path = os.path.join(THEME_DIR, "themes", self.theme_name)
         self.output = os.path.join(THEME_DIR, "output")
@@ -110,8 +177,8 @@ class VWGen(object):
     def __initAttacks(self):
         from core.attack import attack
 
-        print("[*] Loading modules:")
-        print(u"\t {0}".format(u", ".join(attack.modules)))
+        Logger.logInfo("[INFO] Loading modules:")
+        Logger.logInfo(u"[INFO] " + "\t {0}".format(u", ".join(attack.modules)))
 
         for mod_name in attack.modules:
             mod = __import__("core.attack." + mod_name, fromlist=attack.modules)
@@ -148,7 +215,7 @@ class VWGen(object):
                                 found = True
                                 attack_module.doReturn = False
                         if not found:
-                            print("[!] Unable to find a module named {0}".format(module))
+                            Logger.logError("[ERROR] Unable to find a module named {0}".format(module))
 
                 # activate some module options
                 else:
@@ -157,7 +224,7 @@ class VWGen(object):
                     else:
                         module = attack.default
                     if module == "all":
-                        print("[!] Keyword 'all' was not safe enough for activating all modules at once. Specify modules names instead.")
+                        Logger.logError("[ERROR] Keyword 'all' was not safe enough for activating all modules at once. Specify modules names instead.")
                     else:
                         found = False
                         for attack_module in self.attacks:
@@ -165,7 +232,11 @@ class VWGen(object):
                                 found = True
                                 attack_module.doReturn = True
                         if not found:
-                            print("[!] Unable to find a module named {0}".format(module))
+                            Logger.logError("[ERROR] Unable to find a module named {0}".format(module))
+
+
+    def setColor(self):
+        self.color = 1
 
 
     def generate(self):
@@ -182,7 +253,9 @@ class VWGen(object):
         for x in self.attacks:
             if x.doReturn:
                 x.logG(u"[+] Launching module {0}".format(x.name))
-                x.logG(u"   and its deps: {0}".format(deps if deps is not None else 'x'))
+                x.logG(u"   and its deps: {0}".format(deps if deps is not None else 'None'))
+                if self.color == 1:
+                    x.setColor()
                 target_dir = os.path.join(self.output, self.theme_name)
                 web.payloads = x.Job(self.source, self.backend, self.dbms, target_dir)
 
@@ -191,9 +264,18 @@ class VWGen(object):
 
     def setBackend(self, backend="php"):
         self.backend = backend
-        if self.backend == 'php':
-            self.image = 'richarvey/nginx-php-fpm'
-            self.mount_point = '/usr/share/nginx/html'
+        for case in switch(self.backend):
+            if case('php'):
+                self.image = 'richarvey/nginx-php-fpm'
+                self.mount_point = '/usr/share/nginx/html'
+                break
+            if case('php7'):
+                self.image = 'richarvey/nginx-php-fpm:beta70'
+                self.mount_point = '/usr/share/nginx/html'
+                break
+            if case():
+                Logger.logError("[ERROR] Backend {0} not supported!".format(self.backend))
+                sys.exit(1)
 
 
     def setDBMS(self, DBMS):
@@ -210,7 +292,7 @@ class VWGen(object):
                     )
                 except APIError:
                     for line in web.client.pull('mysql', tag="latest", stream=True):
-                        print(json.dumps(json.loads(line), indent=4))
+                        Logger.logInfo("[INFO]" + json.dumps(json.loads(line), indent=4))
                     web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
                         environment={
                             "MYSQL_ROOT_PASSWORD": "root_password",
@@ -223,7 +305,7 @@ class VWGen(object):
                     web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
                 except APIError:
                     for line in web.client.pull('mongo', tag="latest", stream=True):
-                        print(json.dumps(json.loads(line), indent=4))
+                        Logger.logInfo("[INFO]" + json.dumps(json.loads(line), indent=4))
                     web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
                 web.client.start(web.db_ctr)
 
@@ -245,6 +327,9 @@ if __name__ == "__main__":
         p.add_option('--module',
                     action="store", dest="modules", default="+unfilter", metavar='MODULES_LIST',
                     help="List of modules to load. Default is mod_unfilter.")
+        p.add_option('--color',
+                    action="store", dest="color", type="int", default=0, metavar='[0, 1]',
+                    help="Set terminal color.")
         p.add_option('--verbose', '-v',
                     action="store", dest="verbosity", type="int", default=0, metavar='LEVEL',
                     help="[Not supported yet] Set verbosity level.")
@@ -277,6 +362,8 @@ if __name__ == "__main__":
         web.client = client
         web.ctr = ctr
         gen = VWGen()
+        if options.color:
+            gen.setColor()
         gen.setBackend()
         gen.setDBMS(web.dbms)
         gen.setModules(web.modules)
@@ -306,7 +393,7 @@ if __name__ == "__main__":
                 , name='VW')
             except APIError:
                 for line in web.client.pull('{0}'.format(gen.image), tag="latest", stream=True):
-                    print(json.dumps(json.loads(line), indent=4))
+                    Logger.logInfo("[INFO]" + json.dumps(json.loads(line), indent=4))
                 web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point), '/etc/php5/fpm/php.ini'],
                     host_config=web.client.create_host_config(
                         port_bindings={
@@ -340,21 +427,23 @@ if __name__ == "__main__":
 
             url[4] = urlencode(query)
 
-            print "Browse: {0}".format(urlparse.urlunparse(url))
+            t = Terminal()
+            with t.location(0, t.height - 1):
+                Logger.logSuccess(t.center(t.blink("[SUCCESS] Browse: {0}".format(urlparse.urlunparse(url)))))
 
             with time_limit(600) as t:
                 for line in web.client.logs(web.ctr, stderr=False, stream=True):
                     time.sleep(0.1)
-                    print line
+                    Logger.logInfo("[INFO] " + line)
                     if t.timed_out:
                         break
                     else:
                         t.timed_reset
     except (KeyboardInterrupt, SystemExit, RuntimeError):
-        print "Taking you to leave the program."
+        Logger.logInfo("[INFO] Taking you to leave the program.")
     except APIError as e:
-        print "\n" + str(e.args[0])
-        print "\nTaking you to safely leave the program."
+        Logger.logError("\n" + "[ERROR] " + str(e.args[0]))
+        Logger.logInfo("\n[INFO] Taking you to safely leave the program.")
     finally:
         try:
             shutil.rmtree(web.path)
@@ -363,4 +452,4 @@ if __name__ == "__main__":
         except (TypeError, NullResource):
             pass
         except APIError:
-            print "Some APIErrors found! You may need to remove containers by yourself."
+            Logger.logError("[ERROR] Some APIErrors found! You may need to remove containers by yourself.")
