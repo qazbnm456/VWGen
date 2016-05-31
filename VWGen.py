@@ -34,12 +34,19 @@ web.modules        = None
 web.dbms           = None
 
 if platform.system() == 'Darwin' or platform.system() == 'Windows':
-    from docker.utils import kwargs_from_env  # TLS problem, can be referenced from https://github.com/docker/machine/issues/1335
-    web.host = '{0}'.format(urlparse.urlparse(os.environ['DOCKER_HOST']).netloc.split(':')[0])
-    client = Client(base_url='{0}'.format(os.environ['DOCKER_HOST']))
-    kwargs = kwargs_from_env()
-    kwargs['tls'].assert_hostname = False
-    client = Client(**kwargs)
+    try:
+        from docker.utils import kwargs_from_env  # TLS problem, can be referenced from https://github.com/docker/machine/issues/1335
+        web.host = '{0}'.format(urlparse.urlparse(os.environ['DOCKER_HOST']).netloc.split(':')[0])
+        client = Client(base_url='{0}'.format(os.environ['DOCKER_HOST']))
+        kwargs = kwargs_from_env()
+        kwargs['tls'].assert_hostname = False
+        client = Client(**kwargs)
+    except KeyError:
+        web.host = '127.0.0.1'
+        client = Client(base_url='unix://var/run/docker.sock')
+    except:
+        print "$DOCKER_HOST variable undefined! Exit..."
+        sys.exit(1)
 else:
     web.host = '127.0.0.1'
     client = Client(base_url='unix://var/run/docker.sock')
