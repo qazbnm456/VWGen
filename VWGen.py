@@ -2,6 +2,7 @@
 
 import platform
 import os
+import re
 import sys
 import json
 import optparse
@@ -118,6 +119,17 @@ class switch(object):
             return False
 
 
+def enter_shell(gen):
+    Logger.logInfo("VWGen ready (press Ctrl+D to end input)")
+    while True:
+        print ">",
+        result = gen.parse(sys.stdin.readline())
+        if result is not None:
+            Logger.logSuccess(result)
+        else:
+            sys.exit(0)
+
+
 parent_dir = os.path.abspath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), os.pardir))
 if os.path.exists(os.path.join(parent_dir, "demo")):
@@ -155,7 +167,7 @@ class VWGen(object):
         self.theme_name = "startbootstrap-agency-1.0.6"  # startbootstrap-clean-blog-1.0.4, startbootstrap-agency-1.0.6
         self.theme_path = os.path.join(THEME_DIR, "themes", self.theme_name)
         self.output = os.path.join(THEME_DIR, "output")
-        self.backend = ""
+        self.backend = "php"
         self.image = ""
         self.dbms = ""
         self.attacks = []
@@ -237,8 +249,9 @@ class VWGen(object):
                             Logger.logError("[ERROR] Unable to find a module named {0}".format(module))
 
 
-    def setColor(self):
-        self.color = 1
+    def setColor(self, default=1):
+        self.color = default
+        return self.color
 
 
     def generate(self):
@@ -270,10 +283,12 @@ class VWGen(object):
             if case('php'):
                 self.image = 'richarvey/nginx-php-fpm'
                 self.mount_point = '/usr/share/nginx/html'
+                return self.backend
                 break
             if case('php7'):
                 self.image = 'richarvey/nginx-php-fpm:beta70'
                 self.mount_point = '/usr/share/nginx/html'
+                return self.backend
                 break
             if case():
                 Logger.logError("[ERROR] Backend {0} not supported!".format(self.backend))
@@ -294,7 +309,7 @@ class VWGen(object):
                     )
                 except APIError:
                     for line in web.client.pull('mysql', tag="latest", stream=True):
-                        Logger.logInfo("[INFO]" + json.dumps(json.loads(line), indent=4))
+                        Logger.logInfo("[INFO] " + json.dumps(json.loads(line), indent=4))
                     web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
                         environment={
                             "MYSQL_ROOT_PASSWORD": "root_password",
@@ -307,19 +322,72 @@ class VWGen(object):
                     web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
                 except APIError:
                     for line in web.client.pull('mongo', tag="latest", stream=True):
-                        Logger.logInfo("[INFO]" + json.dumps(json.loads(line), indent=4))
+                        Logger.logInfo("[INFO] " + json.dumps(json.loads(line), indent=4))
                     web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
                 web.client.start(web.db_ctr)
+            return self.dbms
 
 
     def setModules(self, options=None):
         self.options = options
+        return options
+
+
+    def showInfos(self):
+        Logger.logInfo("[INFO] Backend: {0}".format(self.backend))
+        Logger.logInfo("[INFO] DBMS: {0}".format(self.dbms))
+        Logger.logInfo("[INFO] Color: {0}".format(str(bool(self.color))))
+        Logger.logInfo("[INFO] Modules: {0}".format(self.options))
+
+
+    def parse(self, arg):
+        from core.attack import attack
+        arg = arg.strip()
+        if arg.startswith("help"):
+            arg = arg[4:].strip()
+            for case in switch(arg):
+                if case('set'):
+                    Logger.logSuccess("[*] set A = B")
+                    break
+                if case('unset'):
+                    Logger.logSuccess("[*] unset A")
+                    break
+                if case('show'):
+                    Logger.logSuccess("[*] show [modules, infos]")
+                    break
+                if case():
+                    Logger.logSuccess("[*] help [set, unset, show]")
+            return True
+        elif arg.startswith("set"):
+            arg = arg[3:].strip()
+            list = re.split("[\s=]+", arg)
+            return getattr(self, ''.join(['set', list[0].capitalize()]))(list[1])
+        elif arg.startswith("unset"):
+            arg = arg[5:].strip()
+            print arg
+            setattr(self, arg, None)
+            return True
+        elif arg.startswith("show"):
+            arg = arg[4:].strip()
+            for case in switch(arg):
+                if case('modules'):
+                    Logger.logSuccess(u"{0}".format(u", ".join(attack.modules)))
+                    break
+                if case('infos'):
+                    self.showInfos()
+                    break
+                if case():
+                    Logger.logSuccess("[*] show [modules, infos]")
+            return True
 
 
 if __name__ == "__main__":
     try:
-        usage = "usage: %prog [options] arg1 arg2"
+        usage = "usage: %prog [options]"
         p = optparse.OptionParser(usage=usage, version="VWGen v0.1")
+        p.add_option('--console', '-c',
+                    action="store_true", metavar='CONSOLE',
+                    help="enter console mode")
         p.add_option('--expose',
                     action="store", dest="expose", type="int", default=80, metavar='EXPOSE_PORT',
                     help="configure the port of the host for container binding (Default: 80)")
@@ -333,9 +401,6 @@ if __name__ == "__main__":
                     action="store_true", dest="color",
                     help="set terminal color")
         group = optparse.OptionGroup(p, 'Not supported', 'Following options are still in development!')
-        group.add_option('--console', '-c',
-                    action="store_true", metavar='CONSOLE',
-                    help="enter console mode")
         group.add_option('--verbose', '-v',
                     action="store_true", dest="verbosity", metavar='LEVEL',
                     help="set verbosity level")
@@ -344,6 +409,11 @@ if __name__ == "__main__":
                     help="specify the file that VWGen will gonna operate on")
         p.add_option_group(group)
         options, arguments = p.parse_args()
+
+        gen = VWGen()
+
+        if options.console:
+            enter_shell(gen)
 
         # set sys.argv to the remaining arguments after
         # everything consumed by optparse
@@ -368,7 +438,7 @@ if __name__ == "__main__":
 
         web.client = client
         web.ctr = ctr
-        gen = VWGen()
+        
         if options.color:
             gen.setColor()
         gen.setBackend()
@@ -400,7 +470,7 @@ if __name__ == "__main__":
                 , name='VW')
             except APIError:
                 for line in web.client.pull('{0}'.format(gen.image), tag="latest", stream=True):
-                    Logger.logInfo("[INFO]" + json.dumps(json.loads(line), indent=4))
+                    Logger.logInfo("[INFO] " + json.dumps(json.loads(line), indent=4))
                 web.ctr = web.client.create_container(image='{0}'.format(gen.image), ports=[80], volumes=['{0}'.format(gen.mount_point), '/etc/php5/fpm/php.ini'],
                     host_config=web.client.create_host_config(
                         port_bindings={

@@ -29,19 +29,20 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 <a name="install"></a>
 ## Install
 
-1. Install latest docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
-2. Install docker-py. `pip install docker-py --user`
+1. Install docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
+2. Install docker-py. `pip install docker-py`
 3. Install lxml. `sudo apt-get install python-lxml`
 4. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
 
 <a name="instruction"></a>
 ## Instruction
 
-    Usage: VWGen.py [options] arg1 arg2
+    Usage: VWGen.py [options]
 
     Options:
       --version             show program's version number and exit
       -h, --help            show this help message and exit
+      -c, --console         enter console mode
       --expose=EXPOSE_PORT  configure the port of the host for container binding
                             (Default: 80)
       --database=DBMS       configure the dbms for container linking
@@ -51,7 +52,6 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
       Not supported:
         Following options are still in development!
 
-        -c, --console       enter console mode
         -v, --verbose       set verbosity level
         --file=FILENAME     specify the file that VWGen will gonna operate on
 
