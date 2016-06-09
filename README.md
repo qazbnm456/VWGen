@@ -29,36 +29,40 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 <a name="install"></a>
 ## Install
 
-1. Install latest docker binary. Only version 1.11.0 supported. Check out official [installing guide](https://docs.docker.com/linux/).
+1. Install latest docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
 2. Install docker-py. `pip install docker-py --user`
 3. Install lxml. `sudo apt-get install python-lxml`
-4. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `python VWGen.py --help` or check below for details.
+4. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
 
 <a name="instruction"></a>
 ## Instruction
 
-	Usage: VWGen.py [options] arg1 arg2
+    Usage: VWGen.py [options] arg1 arg2
 
-	Options:
-	  -h, --help            show this help message and exit
-	  --expose=EXPOSE_PORT  Configure the port of the host for container binding.
-	                        Default is 80.
-	  --database=DBMS       Configure the dbms for container linking.
-	  --module=MODULES_LIST
-	                        List of modules to load. Default is mod_unfilter.
-	  -v LEVEL, --verbose=LEVEL
-	                        [Not supported yet] Set verbosity level.
-	  --file=FILENAME       [Not supported yet] Specify the file that VWGen will
-	                        gonna operate on.
+    Options:
+      --version             show program's version number and exit
+      -h, --help            show this help message and exit
+      --expose=EXPOSE_PORT  configure the port of the host for container binding
+                            (Default: 80)
+      --database=DBMS       configure the dbms for container linking
+      --module=LIST         list of modules to load (Default: +unfilter)
+      --color               set terminal color
+
+      Not supported:
+        Following options are still in development!
+
+        -c, --console       enter console mode
+        -v, --verbose       set verbosity level
+        --file=FILENAME     specify the file that VWGen will gonna operate on
 
 <a name="contribute"></a>
 ## Contributing to VWGen
 
 | Linux | Windows | MacOSX |
 |------------------|---------|---------|
-| ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.11.0-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.11.0-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.11.0-blue.svg) |
+| ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.11.1-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.11.1-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.11.1-blue.svg) |
 
-Wanna enrich the possibilities that VWGen can inspire? Send requests or issues immediately!
+Wanna enrich the possibilities that VWGen can inspire? Send pull requests or issues immediately!
 
 <a name="license"></a>
 ## LICENSE

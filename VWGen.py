@@ -319,25 +319,30 @@ class VWGen(object):
 if __name__ == "__main__":
     try:
         usage = "usage: %prog [options] arg1 arg2"
-        p = optparse.OptionParser(usage=usage)
+        p = optparse.OptionParser(usage=usage, version="VWGen v0.1")
         p.add_option('--expose',
                     action="store", dest="expose", type="int", default=80, metavar='EXPOSE_PORT',
-                    help="Configure the port of the host for container binding. Default is 80.")
+                    help="configure the port of the host for container binding (Default: 80)")
         p.add_option('--database',
                     action="store", dest="dbms", type="string", default=None, metavar='DBMS',
-                    help="Configure the dbms for container linking.")
+                    help="configure the dbms for container linking")
         p.add_option('--module',
-                    action="store", dest="modules", default="+unfilter", metavar='MODULES_LIST',
-                    help="List of modules to load. Default is mod_unfilter.")
+                    action="store", dest="modules", default="+unfilter", metavar='LIST',
+                    help="list of modules to load (Default: +unfilter)")
         p.add_option('--color',
-                    action="store", dest="color", type="int", default=0, metavar='[0, 1]',
-                    help="Set terminal color.")
-        p.add_option('--verbose', '-v',
-                    action="store", dest="verbosity", type="int", default=0, metavar='LEVEL',
-                    help="[Not supported yet] Set verbosity level.")
-        p.add_option('--file',
+                    action="store_true", dest="color",
+                    help="set terminal color")
+        group = optparse.OptionGroup(p, 'Not supported', 'Following options are still in development!')
+        group.add_option('--console', '-c',
+                    action="store_true", metavar='CONSOLE',
+                    help="enter console mode")
+        group.add_option('--verbose', '-v',
+                    action="store_true", dest="verbosity", metavar='LEVEL',
+                    help="set verbosity level")
+        group.add_option('--file',
                     action="store", dest="source", type="string", default=None, metavar='FILENAME',
-                    help="[Not supported yet] Specify the file that VWGen will gonna operate on.")
+                    help="specify the file that VWGen will gonna operate on")
+        p.add_option_group(group)
         options, arguments = p.parse_args()
 
         # set sys.argv to the remaining arguments after
@@ -442,7 +447,7 @@ if __name__ == "__main__":
                     else:
                         t.timed_reset
     except (KeyboardInterrupt, SystemExit, RuntimeError):
-        Logger.logInfo("[INFO] Taking you to leave the program.")
+        Logger.logInfo("[INFO] See you next time.")
     except APIError as e:
         Logger.logError("\n" + "[ERROR] " + str(e.args[0]))
         Logger.logInfo("\n[INFO] Taking you to safely leave the program.")
