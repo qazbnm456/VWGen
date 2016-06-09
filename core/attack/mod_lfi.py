@@ -60,14 +60,14 @@ class mod_lfi(Attack):
             payloads['lficonfig'] = self.findRequireFiles(backend, dbms)
 
             # some modules need installing when starting container
-            if self.payloads['payloads'][self.index]['restict']['deps']:
-                for dep in self.payloads['payloads'][self.index]['restict']['deps']:
+            if self.payloads['payloads'][self.index]['restrict']['deps']:
+                for dep in self.payloads['payloads'][self.index]['restrict']['deps']:
                     payloads['extra'][dep] = 1
 
             if payloads['key'] is not None:
                 for index, _ in enumerate(payloads['key']):
-                    if self.payloads['payloads'][self.index]['restict']['include_value']:
-                        for restrict in self.payloads['payloads'][self.index]['restict']['include_value']:
+                    if self.payloads['payloads'][self.index]['restrict']['include_value']:
+                        for restrict in self.payloads['payloads'][self.index]['restrict']['include_value']:
                             if restrict.startswith("-"):
                                 restrict = restrict[1:]
                                 payloads['value'][index] = payloads['lficonfig'][:payloads['lficonfig'].index(restrict)]
@@ -137,11 +137,11 @@ class mod_lfi(Attack):
         with open(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), 'r') as f:
             lines = f.readlines()
 
-        if self.payloads['payloads'][self.index]['restict']['php.ini']:
+        if self.payloads['payloads'][self.index]['restrict']['php.ini']:
             with open(os.path.join(target_dir, 'php.ini'), 'w') as f:
                 for line in lines:
                     found = False
-                    for key, value in self.payloads['payloads'][self.index]['restict']['php.ini'].iteritems():
+                    for key, value in self.payloads['payloads'][self.index]['restrict']['php.ini'].iteritems():
                         if re.match(r'{0}'.format('^' + key + '(\s*=\s*).*'), line) and not found:
                             found = True
                             f.write(re.sub(r'{0}'.format('^' + key + '(\s*=\s*).*'), lambda m: "{0}{1}{2}".format(key, m.group(1), value), line, flags=re.IGNORECASE))

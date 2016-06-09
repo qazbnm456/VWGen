@@ -6,8 +6,11 @@
         {
             "type"   : "classic lfi",
             "vector" : "<?php require_once({0}); echo $name; ?>",
-            "restict": {
-                "php.ini": {},
+            "restrict": {
+                "php.ini": {
+                        "allow_url_fopen": "Off",
+                        "allow_url_include": "Off"
+                },
                 "include_value": [],
                 "deps": []
             }
@@ -15,8 +18,11 @@
         {
             "type"   : "classic lfi, but restrict the extension",
             "vector" : "<?php require_once({0} . \".php\"); echo $name; ?>",
-            "restict": {
-                "php.ini": {},
+            "restrict": {
+                "php.ini": {
+                        "allow_url_fopen": "Off",
+                        "allow_url_include": "Off"
+                },
                 "include_value": ["-.php"],
                 "deps": []
             }
@@ -24,7 +30,7 @@
         {
             "type"   : "classic lfi, but with some options opened",
             "vector" : "<?php require_once({0}); echo $name; ?>",
-            "restict": {
+            "restrict": {
                 "php.ini": {
                         "allow_url_fopen": "On",
                         "allow_url_include": "On"
@@ -36,7 +42,7 @@
         {
             "type"   : "classic lfi, but with expect:// installed and some options opened",
             "vector" : "<?php require_once({0}); echo $name; ?>",
-            "restict": {
+            "restrict": {
                 "php.ini": {
                         "allow_url_fopen": "On",
                         "allow_url_include": "On"
