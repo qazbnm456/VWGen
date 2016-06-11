@@ -1,6 +1,6 @@
 {
     "preprocessing": {
-        "Mysql": "mysql.config.php"
+        "MySQL": "mysql.config.php"
     },
     "payloads"   : [
         {

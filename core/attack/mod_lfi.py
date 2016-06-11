@@ -34,7 +34,7 @@ class mod_lfi(Attack):
     name = "lfi"
 
     payloads = []
-    index = random.randint(0, 3)
+    index = random.randint(0, 2)
     CONFIG_FILE = "lfiPayloads.txt"
     require = ["unfilter"]
     PRIORITY = 4
@@ -58,11 +58,6 @@ class mod_lfi(Attack):
 
             payloads = self.generate_payloads(payloads['html'], payloads)
             payloads['lficonfig'] = self.findRequireFiles(backend, dbms)
-
-            # some modules need installing when starting container
-            if self.payloads['payloads'][self.index]['restrict']['deps']:
-                for dep in self.payloads['payloads'][self.index]['restrict']['deps']:
-                    payloads['extra'][dep] = 1
 
             if payloads['key'] is not None:
                 for index, _ in enumerate(payloads['key']):

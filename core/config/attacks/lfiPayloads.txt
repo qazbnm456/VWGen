@@ -11,8 +11,7 @@
                         "allow_url_fopen": "Off",
                         "allow_url_include": "Off"
                 },
-                "include_value": [],
-                "deps": []
+                "include_value": []
             }
         },
         {
@@ -23,8 +22,7 @@
                         "allow_url_fopen": "Off",
                         "allow_url_include": "Off"
                 },
-                "include_value": ["-.php"],
-                "deps": []
+                "include_value": ["-.php"]
             }
         },
         {
@@ -35,20 +33,7 @@
                         "allow_url_fopen": "On",
                         "allow_url_include": "On"
                 },
-                "include_value": [],
-                "deps": []
-            }
-        },
-        {
-            "type"   : "classic lfi, but with expect:// installed and some options opened",
-            "vector" : "<?php require_once({0}); echo $name; ?>",
-            "restrict": {
-                "php.ini": {
-                        "allow_url_fopen": "On",
-                        "allow_url_include": "On"
-                },
-                "include_value": [],
-                "deps": ["expect"]
+                "include_value": []
             }
         }
     ]

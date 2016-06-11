@@ -1,32 +1,30 @@
 <?php
     // Configuration
-    $dbhost = 'Mysql';
+    $dbhost = 'MySQL';
     $dbuser = 'root';
     $dbpass = 'root_password';
     $dbname = 'root_mysql';
-    $flag_db = 'flag_db';
+    $flag_table = 'flags';
 
     // Connect to mysql database
     $conn = mysql_connect($dbhost, $dbuser, $dbpass) or die('Error with MySQL connection');
     mysql_query("SET NAMES 'utf8'");
     
-    mysql_select_db($flag_db);
+    mysql_select_db($dbname);
 
     // Check if flags table created
-    $sql = "SELECT flag from flag_db";
+    $sql = "SELECT flag from $flag_table";
     $result = mysql_query($sql);
 
     // Create a new flags table if empty
     if(empty($result)) {
-        $sql = "CREATE TABLE flags ( id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY, flag VARCHAR(30) NOT NULL )";
+        $sql = "CREATE TABLE $flag_table ( id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY, flag VARCHAR(30) NOT NULL )";
         mysql_query($sql) or die('MySQL query error');
 
         // Insert a flag to flags
-        $sql = "INSERT INTO flags (flag) VALUES ('VWGen{m0d_5ql1_fl46}')";
+        $sql = "INSERT INTO $flag_table (flag) VALUES ('VWGen{m0d_5ql1_fl46}')";
         mysql_query($sql) or die('MySQL INSERT query error');
     }
-
-    mysql_select_db($dbname);
 
     // Check if users table created
     $sql = "SELECT last_name from users";

@@ -306,7 +306,7 @@ class VWGen(object):
         self.dbms = Dbms
         web.container_name = '{0}_ctr'.format(self.dbms)
         if self.dbms is not None:
-            if self.dbms == 'Mysql':
+            if self.dbms == 'MySQL':
                 try:
                     web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
                         environment={
@@ -448,8 +448,7 @@ class VWGen(object):
                             }
                         },
                         links={ '{0}'.format(web.container_name): '{0}'.format(self.dbms) } if self.dbms is not None else None
-                    ),
-                    environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
+                    )
                 , name='VW')
             except APIError:
                 for line in web.client.pull('{0}'.format(self.image), tag="latest", stream=True):
@@ -470,8 +469,7 @@ class VWGen(object):
                             }
                         },
                         links={ '{0}'.format(web.container_name): '{0}'.format(self.dbms) } if self.dbms is not None else None
-                    ),
-                    environment={ "DEBS": "expect" } if web.payloads['extra'] and web.payloads['extra']['expect'] == 1 else None
+                    )
                 , name='VW')
 
             web.client.start(web.ctr)
