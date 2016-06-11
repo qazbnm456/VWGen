@@ -43,8 +43,7 @@ class Attack(object):
 
     def __init__(self):
         self.color = 0
-
-        self.fingerprint_flag = False
+        self.verbose = 0
 
         # List of modules (objects) that must be launched during the current module
         # Must be left empty in the code
@@ -53,6 +52,10 @@ class Attack(object):
 
     def setColor(self):
         self.color = 1
+
+
+    def setVerbose(self):
+        self.verbose = 1
 
 
     def doJob(self, http_res, backend, dbms):

@@ -164,6 +164,7 @@ class VWGen(object):
 
     def __init__(self, theme=None):
         self.color = 0
+        self.verbose = 0
         self.theme = None
         self.theme_path = None
         self.output = os.path.join(THEME_DIR, "output")
@@ -255,6 +256,11 @@ class VWGen(object):
         return self.color
 
 
+    def setVerbose(self, default=1):
+        self.verbose = default
+        return self.verbose
+
+
     def generate(self):
         self.__initAttacks()
 
@@ -272,6 +278,8 @@ class VWGen(object):
                 x.logG(u"   and its deps: {0}".format(deps if deps is not None else 'None'))
                 if self.color == 1:
                     x.setColor()
+                if self.verbose == 1:
+                    x.setVerbose()
                 target_dir = os.path.join(self.output, self.theme)
                 web.payloads = x.Job(self.source, self.backend, self.dbms, target_dir)
 
@@ -373,6 +381,7 @@ class VWGen(object):
         Logger.logInfo("[INFO] Theme: {0}".format(self.theme))
         Logger.logInfo("[INFO] Expose Port: {0}".format(self.expose))
         Logger.logInfo("[INFO] Color: {0}".format(str(bool(self.color))))
+        Logger.logInfo("[INFO] Verbose: {0}".format(str(bool(self.verbose))))
         Logger.logInfo("[INFO] Modules: {0}".format(self.options))
 
 
@@ -526,10 +535,10 @@ if __name__ == "__main__":
         p.add_option('--color',
                     action="store_true", dest="color",
                     help="set terminal color")
-        group = optparse.OptionGroup(p, 'Not supported', 'Following options are still in development!')
-        group.add_option('--verbose', '-v',
+        p.add_option('--verbose', '-v',
                     action="store_true", dest="verbosity", metavar='LEVEL',
                     help="set verbosity level")
+        group = optparse.OptionGroup(p, 'Not supported', 'Following options are still in development!')
         group.add_option('--file',
                     action="store", dest="source", type="string", default=None, metavar='FILENAME',
                     help="specify the file that VWGen will gonna operate on")
@@ -561,6 +570,10 @@ if __name__ == "__main__":
             
             if options.color:
                 gen.setColor()
+
+            if options.verbosity:
+                gen.setVerbose()
+
             gen.setBackend(options.backend)
             gen.setDbms(options.dbms)
             gen.setTheme(options.theme)

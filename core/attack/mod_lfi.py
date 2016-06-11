@@ -85,32 +85,47 @@ class mod_lfi(Attack):
             if found_node is not None and len(found_node) != 0:
                 for node in found_node:
                     if identifier in node.tag:
-                        # print("Found in tag name")
+                        if self.verbose:
+                            self.logY("Found in tag name {0}".format(node.tag))
                         d = {"type": "tag", "value": node.tag, "lineno": node.getparent().getprevious().text.strip(), "identifier": identifier}
                         if d not in entries:
+                            if self.verbose:
+                                self.logY("\t{0}".format(d))
                             entries.append(d)
                     elif node.text is not None and identifier in node.text:
-                        # print("Found in text, tag {0}".format(node.tag))
+                        if self.verbose:
+                            self.logY("Found in text, tag {0}".format(node.tag))
                         d = {"type": "text", "parent": node.tag, "lineno": node.getprevious().text.strip(), "identifier": identifier}
                         if d not in entries:
+                            if self.verbose:
+                                self.logY("\t{0}".format(d))
                             entries.append(d)
                     for k, v in node.attrib.iteritems():
                         if identifier in v:
-                            # print("Found in attribute value {0} of tag {1}".format(k, node.tag))
+                            if self.verbose:
+                                self.logY("Found in attribute value {0} of tag {1}".format(k, node.tag))
                             d = {"type": "attrval", "name": k, "tag": node.tag, "lineno": node.getprevious().text.strip(), "identifier": identifier}
                             if d not in entries:
+                                if self.verbose:
+                                    self.logY("\t{0}".format(d))
                                 entries.append(d)
                         if identifier in k:
-                            # print("Found in attribute name {0} of tag {1}".format(k, node.tag))
+                            if self.verbose:
+                                self.logY("Found in attribute name {0} of tag {1}".format(k, node.tag))
                             d = {"type": "attrname", "name": k, "tag": node.tag, "lineno": node.getprevious().text.strip(), "identifier": identifier}
                             if d not in entries:
+                                if self.verbose:
+                                    self.logY("\t{0}".format(d))
                                 entries.append(d)
             found_node = etree_node.xpath("//comment()[re:test(., '{0}', 'i')]".format(identifier), namespaces={'re': "http://exslt.org/regular-expressions"})
             if found_node is not None and len(found_node) != 0:
                 for node in found_node:
-                    # print("Found in comment, content: \"{0}\"".format(node))
+                    if self.verbose:
+                        self.logY("Found in comment, content: \"{0}\"".format(node))
                     d = {"type": "comment", "lineno": (node.getparent().getprevious().text.strip()) if (node.getprevious() is None) else (node.getprevious().text.strip()), "identifier": identifier}
                     if d not in entries:
+                        if self.verbose:
+                            self.logY("\t{0}".format(d))
                         entries.append(d)
 
 
@@ -191,4 +206,6 @@ class mod_lfi(Attack):
                     if not found:
                         f.write(line)
 
+        if self.verbose:
+            self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, payloads['lficonfig']), os.path.join(target_dir, payloads['lficonfig'])))
         shutil.copy(os.path.join(self.CONFIG_DIR, payloads['lficonfig']), os.path.join(target_dir, payloads['lficonfig']))
