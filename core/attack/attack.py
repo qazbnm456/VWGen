@@ -2,7 +2,7 @@ import os
 import sys
 import shutil
 
-modules = ["mod_unfilter", "mod_sqli", "mod_nosqli", "mod_lfi"]
+modules = ["mod_unfilter", "mod_sqli", "mod_nosqli", "mod_lfi", "mod_crlf"]
 themes = ["startbootstrap-agency-1.0.6", "startbootstrap-clean-blog-1.0.4"]
 default = "unfilter"
 

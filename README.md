@@ -20,7 +20,7 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 <a name="status"></a>
 ## Status quo
 
-1. Supporting very limited modules, such as [unfilter](https://www.owasp.org/index.php/Injection_Prevention_Cheat_Sheet), [SQLI](https://www.owasp.org/index.php/SQL_Injection), [NOSQLI](https://www.owasp.org/index.php/Testing_for_NoSQL_injection) and [LFI](https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion).
+1. Supporting very limited modules, such as [unfilter](https://www.owasp.org/index.php/Injection_Prevention_Cheat_Sheet), [SQLI](https://www.owasp.org/index.php/SQL_Injection), [NOSQLI](https://www.owasp.org/index.php/Testing_for_NoSQL_injection), [LFI](https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion) and [CRLF](https://www.owasp.org/index.php/CRLF_Injection).
 
 2. Only two themes right now.
 

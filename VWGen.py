@@ -481,6 +481,8 @@ class VWGen(object):
 
             if web.payloads['key'] is not None:
                 for index, _ in enumerate(web.payloads['key']):
+                    if re.search("page", web.payloads['key'][index], flags=re.IGNORECASE):
+                        web.payloads['value'][index] = "index"
                     params.update({'{0}'.format(web.payloads['key'][index]): '{0}'.format(web.payloads['value'][index])})
 
             query = params
@@ -517,10 +519,10 @@ if __name__ == "__main__":
         p.add_option('--expose',
                     action="store", dest="expose", type="int", default=80, metavar='EXPOSE_PORT',
                     help="configure the port of the host for container binding (Default: 80)")
-        p.add_option('--database',
+        p.add_option('--database', '--db',
                     action="store", dest="dbms", type="string", default=None, metavar='DBMS',
                     help="configure the dbms for container linking")
-        p.add_option('--module',
+        p.add_option('--modules',
                     action="store", dest="modules", default="+unfilter", metavar='LIST',
                     help="list of modules to load (Default: +unfilter)")
         p.add_option('--color',

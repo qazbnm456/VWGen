@@ -1,0 +1,11 @@
+{
+    "preprocessing": {
+        "php": "home.php"
+    },
+    "payloads"   : [
+        {
+            "type"   : "classic crlf",
+            "vector" : "<?php echo '/home.php?home=' . {0}; ?>"
+        }
+    ]
+}

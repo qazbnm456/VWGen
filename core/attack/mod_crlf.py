@@ -28,14 +28,14 @@ except ImportError:
                     print("Failed to import ElementTree from any known place")
                     sys.exit(0)
 
-class mod_sqli(Attack):
-    """This class implements a SQL-Injection vulnerabilities generator."""
+class mod_crlf(Attack):
+    """This class implements a crlf vulnerabilities generator."""
 
-    name = "sqli"
+    name = "crlf"
 
     payloads = []
-    index = random.randint(0, 1)
-    CONFIG_FILE = "sqliPayloads.txt"
+    index = random.randint(0, 0)
+    CONFIG_FILE = "crlfPayloads.txt"
     require = ["unfilter"]
     PRIORITY = 4
 
@@ -46,7 +46,7 @@ class mod_sqli(Attack):
 
 
     def findRequireFiles(self, backend, dbms):
-        return self.payloads['preprocessing']['{0}'.format(dbms)]
+        return self.payloads['preprocessing']['{0}'.format(backend)]
 
 
     def doJob(self, http_res, backend, dbms):
@@ -57,9 +57,9 @@ class mod_sqli(Attack):
                     payloads = x.doJob(http_res, backend, dbms)
 
             payloads = self.generate_payloads(payloads['html'], payloads)
-            payloads['dbconfig'] = self.findRequireFiles(backend, dbms)
+            payloads['crlfconfig'] = self.findRequireFiles(backend, dbms)
         except:
-            self.logR("ERROR!! You might forget to set DBMS variable.")
+            self.logR("ERROR!! You might forget to set Backend variable.")
             sys.exit(0)
 
         return payloads
@@ -145,7 +145,7 @@ class mod_sqli(Attack):
 
         payloads['html'] = "\n".join(o)
 
-        payloads['dbconfig']= ""
+        payloads['crlfconfig']= ""
         return payloads
 
 
@@ -159,9 +159,9 @@ class mod_sqli(Attack):
     def final(self, payloads, target_dir):
         dst = open(os.path.join(target_dir, "index.php"), 'w')
         try:
-            dst.write('<?php require_once("{0}"); ?>\r\n{1}'.format(payloads['dbconfig'], payloads['html']))
+            dst.write(payloads['html'])
         finally:
             dst.close()
 
-        shutil.copy(os.path.join(self.CONFIG_DIR, payloads['dbconfig']), os.path.join(target_dir, payloads['dbconfig']))
         shutil.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))
+        shutil.copy(os.path.join(self.CONFIG_DIR, payloads['crlfconfig']), os.path.join(target_dir, payloads['crlfconfig']))
