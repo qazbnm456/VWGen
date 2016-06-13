@@ -56,9 +56,10 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
       --color               set terminal color
       -v, --verbose         set verbosity level
 
-      Not supported:
+      Under development:
         Following options are still in development!
 
+        --craft=CRAFTING    craft the loopholes on your own
         --file=FILENAME     specify the file that VWGen will gonna operate on
 
 <a name="brief"></a>

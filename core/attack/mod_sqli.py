@@ -49,14 +49,21 @@ class mod_sqli(Attack):
         return self.payloads['preprocessing']['{0}'.format(dbms)]
 
 
-    def doJob(self, http_res, backend, dbms):
+    def generateHandler(self, o, elem, payloads={}):
+        if elem['type'] != "attrval":
+            o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+        else:
+            o[int(elem['lineno'])-1] = re.sub(r'(.*)#+<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+
+
+    def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""
         try:
             for x in self.deps:
                 if x.name == "unfilter":
-                    payloads = x.doJob(http_res, backend, dbms)
+                    payloads = x.doJob(http_res, backend, dbms, parent=self.name)
 
-            payloads = self.generate_payloads(payloads['html'], payloads)
+            payloads = self.generate_payloads(payloads['html'], payloads, parent=parent)
             payloads['dbconfig'] = self.findRequireFiles(backend, dbms)
         except:
             self.logR("ERROR!! You might forget to set DBMS variable.")
@@ -65,7 +72,7 @@ class mod_sqli(Attack):
         return payloads
 
 
-    def study(self, etree_node, entries=[], lines=[]):
+    def study(self, etree_node, entries=[], lines=[], parent=None):
         for identifier in ["inject"]:
             found_node = etree_node.xpath("//*[@*[re:test(., '{0}', 'i')] or @*[re:test(name(.), '{0}', 'i')] or re:test(local-name(),'{0}', 'i') or text()[re:test(., '{0}', 'i')]]".format(identifier), namespaces={'re': "http://exslt.org/regular-expressions"})
             if found_node is not None and len(found_node) != 0:
@@ -116,7 +123,7 @@ class mod_sqli(Attack):
 
 
     # Generate payloads based on what situations we met.
-    def generate_payloads(self, html_code, payloads={}):
+    def generate_payloads(self, html_code, payloads={}, parent=None):
         e = []
         o = []
         l = []
@@ -126,29 +133,29 @@ class mod_sqli(Attack):
             l.append("<!-- {0} -->{1}".format(index, line))
 
         tree = etree.HTML("\n".join(l))
-        self.study(tree, entries=e, lines=l)
+        self.study(tree, entries=e, lines=l, parent=parent)
 
         for elem in e:
             # <a href="inject_point"></a>
             if elem['type'] == "attrval":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[@*[re:test(., '{0}', 'i')]]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    o[int(elem['lineno'])-1] = re.sub(r'(.*)#+<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+                    self.generateHandler(o, elem, payloads)
             # <a inject_point="test">
             elif elem['type'] == "attrname":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[@*[re:test(name(.), '{0}', 'i')]]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+                    self.generateHandler(o, elem, payloads)
             # <inject_point name="test" />
             elif elem['type'] == "tag":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[re:test(local-name(), '{0}', 'i')]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+                    self.generateHandler(o, elem, payloads)
             # <span>inject_point</span>
             elif elem['type'] == "text":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[text()]")
                 if len(found_node) == 1:
-                    o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+                    self.generateHandler(o, elem, payloads)
             # <!-- inject_point -->
             elif elem['type'] == "comment":
                 try:
@@ -156,7 +163,7 @@ class mod_sqli(Attack):
                 except:
                     found_node = etree.HTML("{0}{1}{2}".format("<div>", l[int(elem['lineno'])-1], "</div>")).xpath("//comment()[re:test(., '{0}', 'i')]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+                    self.generateHandler(o, elem, payloads)
 
         payloads['html'] = "\n".join(o)
 

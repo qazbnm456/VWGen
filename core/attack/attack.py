@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+from abc import ABCMeta, abstractmethod
 
 modules = ["mod_unfilter", "mod_sqli", "mod_nosqli", "mod_lfi", "mod_crlf"]
 themes = ["startbootstrap-agency-1.0.6", "startbootstrap-clean-blog-1.0.4"]
@@ -11,6 +12,8 @@ class Attack(object):
     This class represents an attack, it must be extended
     for any class which implements a new type of attack
     """
+
+    __metaclass__ = ABCMeta
 
     name = "attack"
 
@@ -44,6 +47,7 @@ class Attack(object):
     def __init__(self):
         self.color = 0
         self.verbose = 0
+        self.craft = None
 
         # List of modules (objects) that must be launched during the current module
         # Must be left empty in the code
@@ -58,8 +62,18 @@ class Attack(object):
         self.verbose = 1
 
 
-    def doJob(self, http_res, backend, dbms):
-        return
+    def setCraft(self, craft=None):
+        self.craft = craft
+
+
+    @abstractmethod
+    def generateHandler(self, o, elem, payloads={}):
+        pass
+
+
+    @abstractmethod
+    def doJob(self, http_res, backend, dbms, parent=None):
+        pass
 
 
     def final(self, payloads, target_dir):
@@ -135,6 +149,13 @@ class Attack(object):
 
     def Job(self, source, backend, dbms, target_dir):
         if self.doReturn == True:
-            payloads = self.doJob(source, backend, dbms)
+            if self.craft is not None:
+                exec \
+                    """def foo(self, o, elem, payloads={}):
+                            %s
+                    """ % (self.craft)
+                self.generateHandler = type(self.__class__.generateHandler)(foo, self, self.__class__)
+                self.logG("[+] Your crafting has been loaded!") 
+            payloads = self.doJob(source, backend, dbms, parent=None)
             self.final(payloads, target_dir)
             return payloads

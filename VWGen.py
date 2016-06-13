@@ -173,8 +173,9 @@ class VWGen(object):
         self.dbms = None
         self.expose = None
         self.attacks = []
-        self.options = None
+        self.modules = None
         self.source = None
+        self.craft = None
 
 
     def __initBackend(self):
@@ -204,12 +205,12 @@ class VWGen(object):
             self.attacks.sort(lambda a, b: a.PRIORITY - b.PRIORITY)
 
         # Custom list of modules was specified
-        if self.options is not None:
+        if self.modules is not None:
             # First deactivate all modules
             for attack_module in self.attacks:
                 attack_module.doReturn = False
 
-            opts = self.options.split(",")
+            opts = self.modules.split(",")
 
             for opt in opts:
                 if opt.strip() == "":
@@ -217,7 +218,7 @@ class VWGen(object):
 
                 module = opt
 
-                # deactivate some module options
+                # deactivate some modules
                 if module.startswith("-"):
                     module = module[1:]
                     if module == "all":
@@ -233,7 +234,7 @@ class VWGen(object):
                         if not found:
                             Logger.logError("[ERROR] Unable to find a module named {0}".format(module))
 
-                # activate some module options
+                # activate some modules
                 else:
                     if module.startswith("+"):
                         module = module[1:]
@@ -261,6 +262,11 @@ class VWGen(object):
         return self.verbose
 
 
+    def setCraft(self, craft=None):
+        self.craft = craft
+        return self.craft
+
+
     def generate(self):
         self.__initAttacks()
 
@@ -276,10 +282,12 @@ class VWGen(object):
             if x.doReturn:
                 x.logG(u"[+] Launching module {0}".format(x.name))
                 x.logG(u"   and its deps: {0}".format(deps if deps is not None else 'None'))
-                if self.color == 1:
+                if self.color:
                     x.setColor()
-                if self.verbose == 1:
+                if self.verbose:
                     x.setVerbose()
+                if self.craft is not None:
+                    x.setCraft(self.craft)
                 target_dir = os.path.join(self.output, self.theme)
                 web.payloads = x.Job(self.source, self.backend, self.dbms, target_dir)
 
@@ -365,14 +373,14 @@ class VWGen(object):
         return self.expose
 
 
-    def setModules(self, options="+unfilter"):
-        if options == "None":
+    def setModules(self, modules="+unfilter"):
+        if modules == "None":
             Logger.logError("[ERROR] Not supported modules!")
-            self.options = "+unfilter"
-            Logger.logInfo("[Info] set modules to {0}!".format(self.options))
+            self.modules = "+unfilter"
+            Logger.logInfo("[Info] set modules to {0}!".format(self.modules))
         else:
-            self.options = options
-        return options
+            self.modules = modules
+        return modules
 
 
     def showInfos(self):
@@ -382,7 +390,8 @@ class VWGen(object):
         Logger.logInfo("[INFO] Expose Port: {0}".format(self.expose))
         Logger.logInfo("[INFO] Color: {0}".format(str(bool(self.color))))
         Logger.logInfo("[INFO] Verbose: {0}".format(str(bool(self.verbose))))
-        Logger.logInfo("[INFO] Modules: {0}".format(self.options))
+        Logger.logInfo("[INFO] Craft: {0}".format(self.craft))
+        Logger.logInfo("[INFO] Modules: {0}".format(self.modules))
 
 
     def parse(self, arg):
@@ -498,7 +507,7 @@ class VWGen(object):
 
             t = Terminal()
             with t.location(0, t.height - 1):
-                Logger.logSuccess(t.center(t.blink("[SUCCESS] Browse: {0}".format(urlparse.urlunparse(url)))))
+                Logger.logSuccess(t.center(t.blink("Browse: {0}".format(urlparse.urlunparse(url)))))
 
             with time_limit(600) as t:
                 for line in web.client.logs(web.ctr, stderr=False, stream=True):
@@ -538,7 +547,10 @@ if __name__ == "__main__":
         p.add_option('--verbose', '-v',
                     action="store_true", dest="verbosity", metavar='LEVEL',
                     help="set verbosity level")
-        group = optparse.OptionGroup(p, 'Not supported', 'Following options are still in development!')
+        group = optparse.OptionGroup(p, 'Under development', 'Following options are still in development!')
+        group.add_option('--craft',
+                    action="store", dest="craft", type="string", default=None, metavar='CRAFTING',
+                    help="craft the loopholes on your own")
         group.add_option('--file',
                     action="store", dest="source", type="string", default=None, metavar='FILENAME',
                     help="specify the file that VWGen will gonna operate on")
@@ -579,6 +591,7 @@ if __name__ == "__main__":
             gen.setTheme(options.theme)
             gen.setExpose(options.expose)
             gen.setModules(options.modules)
+            gen.setCraft(options.craft)
             
             gen.start()
     except (KeyboardInterrupt, SystemExit, RuntimeError):

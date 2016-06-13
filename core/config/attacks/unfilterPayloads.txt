@@ -1,7 +1,13 @@
 {
-    "identifiers": [
-        "by", "To Meet", "page-top"
-    ],
+    "identifiers": {
+        "crlf": [
+            "page-top"
+        ],
+        "others": [
+            "by",
+            "To Meet"
+        ]
+    },
     "payloads"   : {
         "True": [
             {
