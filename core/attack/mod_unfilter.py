@@ -33,6 +33,7 @@ class mod_unfilter(Attack):
     name = "unfilter"
 
     payloads = []
+    settings = {}
     index = random.randint(0, 1)
     CONFIG_FILE = "unfilterPayloads.txt"
     require = []
@@ -44,23 +45,23 @@ class mod_unfilter(Attack):
         self.payloads = json.load(self.fd)
 
 
-    def generateHandler(self, o, elem, payloads={}):
+    def generateHandler(self, tree_node=None, o=None, elem=None):
         if elem['type'] != "text":
             o[int(elem['lineno'])-1] = re.sub(r'(.*){0}(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.payloads['revisable']][self.index]['vector'].format(elem['identifier'].replace(' ', '_')), m.group(2)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
-            payloads['key'].append(elem['identifier'].replace(' ', '_'))
-            payloads['value'].append('Lobsiinvok')
+            self.settings['key'].append(elem['identifier'].replace(' ', '_'))
+            self.settings['value'].append('Lobsiinvok')
         else:
             o[int(elem['lineno'])-1] = re.sub(r'(.*){0}\s*(.*)\s*(<.*>)'.format(elem['identifier']), lambda m: "{0}{1} {2}{3}".format(m.group(1), elem['identifier'], self.payloads['payloads'][self.payloads['revisable']][self.index]['vector'].format(elem['identifier'].replace(' ', '_')), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
-            payloads['key'].append(elem['identifier'].replace(' ', '_'))
-            payloads['value'].append('Lobsiinvok')
+            self.settings['key'].append(elem['identifier'].replace(' ', '_'))
+            self.settings['value'].append('Lobsiinvok')
 
 
     def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""
         self.payloads['revisable'] = 'True' if self.doReturn is False else 'False'
-        payloads = self.generate_payloads(http_res, parent=parent)
+        self.settings = self.generate_payloads(http_res, parent=parent)
 
-        return payloads
+        return self.settings
 
 
     def study(self, etree_node, entries=[], lines=[], parent=None):
@@ -79,7 +80,7 @@ class mod_unfilter(Attack):
                     elif node.text is not None and identifier in node.text:
                         if self.verbose:
                             self.logY("Found in text, tag {0}".format(node.tag))
-                        d = {"type": "text", "parent": node.tag, "lineno": node.getprevious().text.strip(), "identifier": identifier}
+                        d = {"type": "text", "parent": node.tag, "lineno": node.getprevious().text.strip() if node.getprevious() is not None else node.getparent().getprevious().text.strip(), "identifier": identifier}
                         if d not in entries:
                             if self.verbose:
                                 self.logY("\t{0}".format(d))
@@ -114,7 +115,7 @@ class mod_unfilter(Attack):
 
 
     # Generate payloads based on what situations we met.
-    def generate_payloads(self, html_code, payloads={}, parent=None):
+    def generate_payloads(self, html_code, parent=None):
         e = []
         o = []
         l = []
@@ -126,29 +127,29 @@ class mod_unfilter(Attack):
         tree = etree.HTML("\n".join(l))
         self.study(tree, entries=e, lines=l, parent=parent)
 
-        payloads = {"key": [], "value": [], "html": "", "extra": {}}
+        self.settings = {"key": [], "value": [], "html": "", "extra": {}}
 
         for elem in e:
             # <a href="inject_point"></a>
             if elem['type'] == "attrval":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[@*[re:test(., '{0}', 'i')]]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    self.generateHandler(o, elem, payloads)
+                    self.generateHandler(tree_node=tree, o=o, elem=elem)
             # <a inject_point="test">
             elif elem['type'] == "attrname":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[@*[re:test(name(.), '{0}', 'i')]]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    self.generateHandler(o, elem, payloads)
+                    self.generateHandler(tree_node=tree, o=o, elem=elem)
             # <inject_point name="test" />
             elif elem['type'] == "tag":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[re:test(local-name(), '{0}', 'i')]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    self.generateHandler(o, elem, payloads)
+                    self.generateHandler(tree_node=tree, o=o, elem=elem)
             # <span>inject_point</span>
             elif elem['type'] == "text":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[text()]")
                 if len(found_node) == 1:
-                    self.generateHandler(o, elem, payloads)
+                    self.generateHandler(tree_node=tree, o=o, elem=elem)
             # <!-- inject_point -->
             elif elem['type'] == "comment":
                 try:
@@ -156,8 +157,8 @@ class mod_unfilter(Attack):
                 except:
                     found_node = etree.HTML("{0}{1}{2}".format("<div>", l[int(elem['lineno'])-1], "</div>")).xpath("//comment()[re:test(., '{0}', 'i')]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    self.generateHandler(o, elem, payloads)
+                    self.generateHandler(tree_node=tree, o=o, elem=elem)
 
-        payloads['html'] = "\n".join(o)
+        self.settings['html'] = "\n".join(o)
 
-        return payloads
+        return self.settings

@@ -3,7 +3,7 @@ import sys
 import shutil
 from abc import ABCMeta, abstractmethod
 
-modules = ["mod_unfilter", "mod_sqli", "mod_nosqli", "mod_lfi", "mod_crlf"]
+modules = ["mod_unfilter", "mod_expand", "mod_sqli", "mod_nosqli", "mod_lfi", "mod_crlf", "mod_exec"]
 themes = ["startbootstrap-agency-1.0.6", "startbootstrap-clean-blog-1.0.4"]
 default = "unfilter"
 
@@ -48,6 +48,7 @@ class Attack(object):
         self.color = 0
         self.verbose = 0
         self.craft = None
+        self.settings = {}
 
         # List of modules (objects) that must be launched during the current module
         # Must be left empty in the code
@@ -67,7 +68,7 @@ class Attack(object):
 
 
     @abstractmethod
-    def generateHandler(self, o, elem, payloads={}):
+    def generateHandler(self, tree_node=None, o=None, elem=None):
         pass
 
 
@@ -76,17 +77,17 @@ class Attack(object):
         pass
 
 
-    def final(self, payloads, target_dir):
+    def final(self, target_dir):
         dst = open(os.path.join(target_dir, "index.php"), 'w')
         try:
-            dst.write(payloads['html'])
+            dst.write(self.settings['html'])
         finally:
             dst.close()
 
         shutil.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))
 
 
-    def loadRequire(self, obj=[]):
+    def loadRequire(self, source, backend, dbms, obj=[]):
         self.deps = obj
 
 
@@ -151,11 +152,11 @@ class Attack(object):
         if self.doReturn == True:
             if self.craft is not None:
                 exec \
-                    """def foo(self, o, elem, payloads={}):
+                    """def foo(self, o, elem):
                             %s
                     """ % (self.craft)
                 self.generateHandler = type(self.__class__.generateHandler)(foo, self, self.__class__)
                 self.logG("[+] Your crafting has been loaded!") 
-            payloads = self.doJob(source, backend, dbms, parent=None)
-            self.final(payloads, target_dir)
-            return payloads
+            self.settings = self.doJob(source, backend, dbms, parent=None)
+            self.final(target_dir)
+            return self.settings

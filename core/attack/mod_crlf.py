@@ -34,6 +34,7 @@ class mod_crlf(Attack):
     name = "crlf"
 
     payloads = []
+    settings = {}
     index = random.randint(0, 0)
     CONFIG_FILE = "crlfPayloads.txt"
     require = ["unfilter"]
@@ -49,7 +50,7 @@ class mod_crlf(Attack):
         return self.payloads['preprocessing']['{0}'.format(backend)]
 
 
-    def generateHandler(self, o, elem, payloads={}):
+    def generateHandler(self, tree_node=None, o=None, elem=None):
         if elem['type'] != "attrval":
             o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
         else:
@@ -59,17 +60,13 @@ class mod_crlf(Attack):
     def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""
         try:
-            for x in self.deps:
-                if x.name == "unfilter":
-                    payloads = x.doJob(http_res, backend, dbms, parent=self.name)
-
-            payloads = self.generate_payloads(payloads['html'], payloads, parent=parent)
-            payloads['crlfconfig'] = self.findRequireFiles(backend, dbms)
+            self.settings = self.generate_payloads(self.settings['html'], parent=parent)
+            self.settings['crlfconfig'] = self.findRequireFiles(backend, dbms)
         except:
             self.logR("ERROR!! You might forget to set Backend variable.")
             sys.exit(0)
 
-        return payloads
+        return self.settings
 
 
     def study(self, etree_node, entries=[], lines=[], parent=None):
@@ -80,7 +77,7 @@ class mod_crlf(Attack):
                     if identifier in node.tag:
                         if self.verbose:
                             self.logY("Found in tag name {0}".format(node.tag))
-                        d = {"type": "tag", "value": node.tag, "lineno": node.getparent().getprevious().text.strip(), "identifier": identifier}
+                        d = {"type": "tag", "value": node.tag, "lineno": node.getparent().getprevious().text.strip() if node.getparent().getprevious() is not None else node.getparent().getparent().getprevious().text.strip(), "identifier": identifier}
                         if d not in entries:
                             if self.verbose:
                                 self.logY("\t{0}".format(d))
@@ -88,7 +85,7 @@ class mod_crlf(Attack):
                     elif node.text is not None and identifier in node.text:
                         if self.verbose:
                             self.logY("Found in text, tag {0}".format(node.tag))
-                        d = {"type": "text", "parent": node.tag, "lineno": node.getprevious().text.strip(), "identifier": identifier}
+                        d = {"type": "text", "parent": node.tag, "lineno": node.getprevious().text.strip() if node.getprevious() is not None else node.getparent().getprevious().text.strip(), "identifier": identifier}
                         if d not in entries:
                             if self.verbose:
                                 self.logY("\t{0}".format(d))
@@ -123,7 +120,7 @@ class mod_crlf(Attack):
 
 
     # Generate payloads based on what situations we met.
-    def generate_payloads(self, html_code, payloads={}, parent=None):
+    def generate_payloads(self, html_code, parent=None):
         e = []
         o = []
         l = []
@@ -140,22 +137,22 @@ class mod_crlf(Attack):
             if elem['type'] == "attrval":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[@*[re:test(., '{0}', 'i')]]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    self.generateHandler(o, elem, payloads)
+                    self.generateHandler(tree_node=tree, o=o, elem=elem)
             # <a inject_point="test">
             elif elem['type'] == "attrname":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[@*[re:test(name(.), '{0}', 'i')]]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    self.generateHandler(o, elem, payloads)
+                    self.generateHandler(tree_node=tree, o=o, elem=elem)
             # <inject_point name="test" />
             elif elem['type'] == "tag":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[re:test(local-name(), '{0}', 'i')]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    self.generateHandler(o, elem, payloads)
+                    self.generateHandler(tree_node=tree, o=o, elem=elem)
             # <span>inject_point</span>
             elif elem['type'] == "text":
                 found_node = etree.HTML(l[int(elem['lineno'])-1]).xpath("//*[text()]")
                 if len(found_node) == 1:
-                    self.generateHandler(o, elem, payloads)
+                    self.generateHandler(tree_node=tree, o=o, elem=elem)
             # <!-- inject_point -->
             elif elem['type'] == "comment":
                 try:
@@ -163,29 +160,29 @@ class mod_crlf(Attack):
                 except:
                     found_node = etree.HTML("{0}{1}{2}".format("<div>", l[int(elem['lineno'])-1], "</div>")).xpath("//comment()[re:test(., '{0}', 'i')]".format(elem['identifier']), namespaces={'re': "http://exslt.org/regular-expressions"})
                 if len(found_node) == 1:
-                    self.generateHandler(o, elem, payloads)
+                    self.generateHandler(tree_node=tree, o=o, elem=elem)
 
-        payloads['html'] = "\n".join(o)
+        self.settings['html'] = "\n".join(o)
 
-        payloads['crlfconfig']= ""
-        return payloads
+        self.settings['crlfconfig']= ""
+        return self.settings
 
 
-    def loadRequire(self, obj=[]):
+    def loadRequire(self, source, backend, dbms, obj=[]):
         self.deps = obj
         for x in self.deps:
-            if x.name == "unfilter":
-                x.doReturn = False
+            self.settings = x.doJob(source, backend, dbms, parent=self.name)
+            x.doReturn = False
 
 
-    def final(self, payloads, target_dir):
+    def final(self, target_dir):
         dst = open(os.path.join(target_dir, "index.php"), 'w')
         try:
-            dst.write(payloads['html'])
+            dst.write(self.settings['html'])
         finally:
             dst.close()
 
         shutil.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))
         if self.verbose:
-            self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, payloads['crlfconfig']), os.path.join(target_dir, payloads['crlfconfig'])))
-        shutil.copy(os.path.join(self.CONFIG_DIR, payloads['crlfconfig']), os.path.join(target_dir, payloads['crlfconfig']))
+            self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, self.settings['crlfconfig']), os.path.join(target_dir, self.settings['crlfconfig'])))
+        shutil.copy(os.path.join(self.CONFIG_DIR, self.settings['crlfconfig']), os.path.join(target_dir, self.settings['crlfconfig']))

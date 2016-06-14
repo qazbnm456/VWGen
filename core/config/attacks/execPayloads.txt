@@ -1,0 +1,11 @@
+{
+    "preprocessing": {
+        "php": "ip.php"
+    },
+    "payloads"   : [
+        {
+            "type"   : "classic command injection attack",
+            "vector" : "<div class='vulnerable_code_area'><h2>Ping a device</h2><form name='ping' action='ip.php' method='post'><p> Enter an IP address:<input type='text' name='ip' size='30'><input type='submit' name='Submit' value='Submit'></p></form></div>"
+        }
+    ]
+}

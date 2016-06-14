@@ -1,0 +1,25 @@
+{
+    "identifiers": {
+        "nav": [
+            "li"
+        ]
+    },
+    "payloads"   : {
+        "nav": {
+            "li": {
+                "current":[
+                    {
+                        "action": "substitute",
+                        "vector": "lob_key"
+                    }
+                ],
+                "section": [
+                    {
+                        "action": "recreate",
+                        "vector": "<div class='container'><div class='row'>lob_val</div></div>"
+                    }
+                ]
+            }
+        }
+    }
+}

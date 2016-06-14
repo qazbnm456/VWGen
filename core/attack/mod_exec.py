@@ -28,17 +28,17 @@ except ImportError:
                     print("Failed to import ElementTree from any known place")
                     sys.exit(0)
 
-class mod_sqli(Attack):
-    """This class implements a SQL-Injection vulnerabilities generator."""
+class mod_exec(Attack):
+    """This class implements a exec vulnerabilities generator."""
 
-    name = "sqli"
+    name = "exec"
 
     payloads = []
     settings = {}
-    index = random.randint(0, 1)
-    CONFIG_FILE = "sqliPayloads.txt"
-    require = ["unfilter"]
-    PRIORITY = 4
+    index = random.randint(0, 0)
+    CONFIG_FILE = "execPayloads.txt"
+    require = ["expand", "unfilter"]
+    PRIORITY = 3
 
     def __init__(self):
         Attack.__init__(self)
@@ -47,7 +47,7 @@ class mod_sqli(Attack):
 
 
     def findRequireFiles(self, backend, dbms):
-        return self.payloads['preprocessing']['{0}'.format(dbms)]
+        return self.payloads['preprocessing']['{0}'.format(backend)]
 
 
     def generateHandler(self, tree_node=None, o=None, elem=None):
@@ -61,16 +61,16 @@ class mod_sqli(Attack):
         """This method do a Job."""
         try:
             self.settings = self.generate_payloads(self.settings['html'], parent=parent)
-            self.settings['dbconfig'] = self.findRequireFiles(backend, dbms)
+            self.settings['execconfig'] = self.findRequireFiles(backend, dbms)
         except:
-            self.logR("ERROR!! You might forget to set DBMS variable.")
+            self.logR("ERROR!! You might forget to set Backend variable.")
             sys.exit(0)
-
+        
         return self.settings
 
 
     def study(self, etree_node, entries=[], lines=[], parent=None):
-        for identifier in ["inject"]:
+        for identifier in ["inject", "lob_key"]:
             found_node = etree_node.xpath("//*[@*[re:test(., '{0}', 'i')] or @*[re:test(name(.), '{0}', 'i')] or re:test(local-name(),'{0}', 'i') or text()[re:test(., '{0}', 'i')]]".format(identifier), namespaces={'re': "http://exslt.org/regular-expressions"})
             if found_node is not None and len(found_node) != 0:
                 for node in found_node:
@@ -164,25 +164,27 @@ class mod_sqli(Attack):
 
         self.settings['html'] = "\n".join(o)
 
-        self.settings['dbconfig']= ""
+        self.settings['execconfig']= ""
         return self.settings
 
 
     def loadRequire(self, source, backend, dbms, obj=[]):
         self.deps = obj
+        self.settings = {"html": ""}
+        self.settings['html'] = source
         for x in self.deps:
-            self.settings = x.doJob(source, backend, dbms, parent=self.name)
+            self.settings = x.doJob(self.settings['html'], backend, dbms, parent=self.name)
             x.doReturn = False
 
 
     def final(self, target_dir):
         dst = open(os.path.join(target_dir, "index.php"), 'w')
         try:
-            dst.write('<?php require_once("{0}"); ?>\r\n{1}'.format(self.settings['dbconfig'], self.settings['html']))
+            dst.write(self.settings['html'])
         finally:
             dst.close()
 
         shutil.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))
         if self.verbose:
-            self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, self.settings['dbconfig']), os.path.join(target_dir, self.settings['dbconfig'])))
-        shutil.copy(os.path.join(self.CONFIG_DIR, self.settings['dbconfig']), os.path.join(target_dir, self.settings['dbconfig']))
+            self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, self.settings['execconfig']), os.path.join(target_dir, self.settings['execconfig'])))
+        shutil.copy(os.path.join(self.CONFIG_DIR, self.settings['execconfig']), os.path.join(target_dir, self.settings['execconfig']))

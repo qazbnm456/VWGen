@@ -275,7 +275,7 @@ class VWGen(object):
             if x.doReturn:
                 print('')
                 if x.require:
-                    x.loadRequire([y for y in self.attacks if y.name in x.require])
+                    x.loadRequire(self.source, self.backend, self.dbms, [y for y in self.attacks if y.name in x.require])
                     deps = ", ".join([y.name for y in self.attacks if y.name in x.require])
 
         for x in self.attacks:
@@ -330,7 +330,8 @@ class VWGen(object):
                             "MYSQL_DATABASE": "root_mysql"
                         }
                     )
-                except APIError:
+                except APIError as e:
+                    Logger.logError("\n" + "[ERROR] " + str(e.explanation))
                     for line in web.client.pull('mysql', tag="latest", stream=True):
                         Logger.logInfo("[INFO] " + json.dumps(json.loads(line), indent=4))
                     web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
@@ -343,7 +344,8 @@ class VWGen(object):
             elif self.dbms == 'Mongo':
                 try:
                     web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
-                except APIError:
+                except APIError as e:
+                    Logger.logError("\n" + "[ERROR] " + str(e.explanation))
                     for line in web.client.pull('mongo', tag="latest", stream=True):
                         Logger.logInfo("[INFO] " + json.dumps(json.loads(line), indent=4))
                     web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
@@ -468,7 +470,8 @@ class VWGen(object):
                         links={ '{0}'.format(web.container_name): '{0}'.format(self.dbms) } if self.dbms is not None else None
                     )
                 , name='VW')
-            except APIError:
+            except APIError as e:
+                Logger.logError("\n" + "[ERROR] " + str(e.explanation))
                 for line in web.client.pull('{0}'.format(self.image), tag="latest", stream=True):
                     Logger.logInfo("[INFO] " + json.dumps(json.loads(line), indent=4))
                 web.ctr = web.client.create_container(image='{0}'.format(self.image), ports=[80], volumes=['{0}'.format(self.mount_point), '/etc/php5/fpm/php.ini'],
@@ -597,7 +600,7 @@ if __name__ == "__main__":
     except (KeyboardInterrupt, SystemExit, RuntimeError):
         Logger.logInfo("[INFO] See you next time.")
     except APIError as e:
-        Logger.logError("\n" + "[ERROR] " + str(e.args[0]))
+        Logger.logError("\n" + "[ERROR] " + str(e.explanation))
         Logger.logInfo("\n[INFO] Taking you to safely leave the program.")
     finally:
         try:
@@ -606,5 +609,5 @@ if __name__ == "__main__":
             web.client.remove_container(web.ctr, force=True)
         except (TypeError, NullResource):
             pass
-        except APIError:
-            Logger.logError("[ERROR] Some APIErrors found! You may need to remove containers by yourself.")
+        except APIError as e:
+            Logger.logError("\n" + "[ERROR] " + str(e.explanation))
