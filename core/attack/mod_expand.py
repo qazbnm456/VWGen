@@ -1,4 +1,4 @@
-from core.attack.attack import Attack
+from core.attack.attack import Attack, switch
 import random
 import os
 import re
@@ -27,26 +27,6 @@ except ImportError:
                 except ImportError:
                     print("Failed to import ElementTree from any known place")
                     sys.exit(0)
-
-class switch(object):
-    def __init__(self, value):
-        self.value = value
-        self.fall = False
- 
-    def __iter__(self):
-        """Return the match method once, then stop"""
-        yield self.match
-        raise StopIteration
-     
-    def match(self, *args):
-        """Indicate whether or not to enter a case suite"""
-        if self.fall or not args:
-            return True
-        elif self.value in args: # changed for v1.5, see below
-            self.fall = True
-            return True
-        else:
-            return False
 
 
 class mod_expand(Attack):
@@ -94,7 +74,7 @@ class mod_expand(Attack):
             p_node.insert(p_node.index(tmp_co[-1]) + 1, c_node)
             base.pop("current", None)
             if self.verbose:
-                self.logY("{0}".format(etree.tostring(p_node, method='html', pretty_print=True)))
+                self.logY("{0}".format(etree.tostring(p_node, method='html')))
         for ele in base:
             tmp_co = tree_node.xpath("//{0}".format(ele))
             p_node = tmp_co[-1].getparent()
@@ -102,7 +82,7 @@ class mod_expand(Attack):
             for children in c_node.getchildren():
                 for case in switch(base["{0}".format(ele)][self.index]['action']):
                     if case('substitute'):
-                        tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(base["{0}".format(ele)][self.index]['vector'], m.groups()[1], base["{0}".format(ele)][self.index]['vector']), etree.tostring(children), flags=re.IGNORECASE)
+                        tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(base["{0}".format(ele)][self.index]['vector'], m.groups()[1], base["{0}".format(ele)][self.index]['vector']), etree.tostring(children, method='html'), flags=re.IGNORECASE)
                         c_node.insert(c_node.index(children) + 1, etree.fromstring(tmp))
                         c_node.remove(children)
                         break
@@ -115,7 +95,7 @@ class mod_expand(Attack):
                         self.logR("[ERROR] Wrong format in {0}!".format(self.CONFIG_FILE))
             p_node.insert(p_node.index(tmp_co[-1]) + 1, etree.fromstring(tmp))
             if self.verbose:
-                self.logY("{0}".format(etree.tostring(p_node, method='html', pretty_print=True)))
+                self.logY("{0}".format(etree.tostring(p_node, method='html')))
 
 
     def doJob(self, http_res, backend, dbms, parent=None):
@@ -143,7 +123,7 @@ class mod_expand(Attack):
         o = []
         l = []
 
-        tree = etree.HTML(html_code)
+        tree = etree.HTML(html_code).getroottree()
         self.study(tree, entries=e, lines=l, parent=parent)
 
         self.settings = {"key": [], "value": [], "html": "", "extra": {}}
@@ -151,6 +131,6 @@ class mod_expand(Attack):
         for elem in e:
             self.generateHandler(tree_node=tree, o=o, elem=elem)
 
-        self.settings['html'] = etree.tostring(tree, method='html', pretty_print=True)
+        self.settings['html'] = etree.tostring(tree, method='html')
 
         return self.settings

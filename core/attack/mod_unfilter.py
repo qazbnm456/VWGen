@@ -48,12 +48,14 @@ class mod_unfilter(Attack):
     def generateHandler(self, tree_node=None, o=None, elem=None):
         if elem['type'] != "text":
             o[int(elem['lineno'])-1] = re.sub(r'(.*){0}(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.payloads['revisable']][self.index]['vector'].format(elem['identifier'].replace(' ', '_')), m.group(2)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
-            self.settings['key'].append(elem['identifier'].replace(' ', '_'))
-            self.settings['value'].append('Lobsiinvok')
+            if elem['report'] is not None:
+                self.settings['key'].append(elem['identifier'].replace(' ', '_'))
+                self.settings['value'].append('Lobsiinvok')
         else:
-            o[int(elem['lineno'])-1] = re.sub(r'(.*){0}\s*(.*)\s*(<.*>)'.format(elem['identifier']), lambda m: "{0}{1} {2}{3}".format(m.group(1), elem['identifier'], self.payloads['payloads'][self.payloads['revisable']][self.index]['vector'].format(elem['identifier'].replace(' ', '_')), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
-            self.settings['key'].append(elem['identifier'].replace(' ', '_'))
-            self.settings['value'].append('Lobsiinvok')
+            o[int(elem['lineno'])-1] = re.sub(r'(.*){0}\s*([a-z!\.\?]+)(.*)'.format(elem['identifier']), lambda m: "{0}{1} {2}{3}".format(m.group(1), elem['identifier'], self.payloads['payloads'][self.payloads['revisable']][self.index]['vector'].format(elem['identifier'].replace(' ', '_')), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+            if elem['report'] is not None:
+                self.settings['key'].append(elem['identifier'].replace(' ', '_'))
+                self.settings['value'].append('Lobsiinvok')
 
 
     def doJob(self, http_res, backend, dbms, parent=None):
@@ -69,10 +71,12 @@ class mod_unfilter(Attack):
             found_node = etree_node.xpath("//*[@*[re:test(., '{0}', 'i')] or @*[re:test(name(.), '{0}', 'i')] or re:test(local-name(),'{0}', 'i') or text()[re:test(., '{0}', 'i')]]".format(identifier), namespaces={'re': "http://exslt.org/regular-expressions"})
             if found_node is not None and len(found_node) != 0:
                 for node in found_node:
+                    tmp_id = identifier.split('->')
+                    (report, identifier) = (tmp_id[0], tmp_id[1]) if len(tmp_id) == 2 else (None, tmp_id[0])
                     if identifier in node.tag:
                         if self.verbose:
                             self.logY("Found in tag name {0}".format(node.tag))
-                        d = {"type": "tag", "value": node.tag, "lineno": node.text.strip(), "identifier": identifier}
+                        d = {"type": "tag", "value": node.tag, "lineno": node.text.strip(), "identifier": identifier, "report": report}
                         if d not in entries:
                             if self.verbose:
                                 self.logY("\t{0}".format(d))
@@ -80,7 +84,7 @@ class mod_unfilter(Attack):
                     elif node.text is not None and identifier in node.text:
                         if self.verbose:
                             self.logY("Found in text, tag {0}".format(node.tag))
-                        d = {"type": "text", "parent": node.tag, "lineno": node.getprevious().text.strip() if node.getprevious() is not None else node.getparent().getprevious().text.strip(), "identifier": identifier}
+                        d = {"type": "text", "parent": node.tag, "lineno": node.getprevious().text.strip() if node.getprevious() is not None else node.getparent().getprevious().text.strip(), "identifier": identifier, "report": report}
                         if d not in entries:
                             if self.verbose:
                                 self.logY("\t{0}".format(d))
@@ -89,7 +93,7 @@ class mod_unfilter(Attack):
                         if identifier in v:
                             if self.verbose:
                                 self.logY("Found in attribute value {0} of tag {1}".format(k, node.tag))
-                            d = {"type": "attrval", "name": k, "tag": node.tag, "lineno": node.getprevious().text.strip(), "identifier": identifier}
+                            d = {"type": "attrval", "name": k, "tag": node.tag, "lineno": node.getprevious().text.strip(), "identifier": identifier, "report": report}
                             if d not in entries:
                                 if self.verbose:
                                     self.logY("\t{0}".format(d))
@@ -97,7 +101,7 @@ class mod_unfilter(Attack):
                         if identifier in k:
                             if self.verbose:
                                 self.logY("Found in attribute name {0} of tag {1}".format(k, node.tag))
-                            d = {"type": "attrname", "name": k, "tag": node.tag, "lineno": node.getprevious().text.strip(), "identifier": identifier}
+                            d = {"type": "attrname", "name": k, "tag": node.tag, "lineno": node.getprevious().text.strip(), "identifier": identifier, "report": report}
                             if d not in entries:
                                 if self.verbose:
                                     self.logY("\t{0}".format(d))
@@ -107,7 +111,7 @@ class mod_unfilter(Attack):
                 for node in found_node:
                     if self.verbose:
                         self.logY("Found in comment, content: \"{0}\"".format(node))
-                    d = {"type": "comment", "lineno": (node.getparent().getprevious().text.strip()) if (node.getprevious() is None) else (node.getprevious().text.strip()), "identifier": identifier}
+                    d = {"type": "comment", "lineno": (node.getparent().getprevious().text.strip()) if (node.getprevious() is None) else (node.getprevious().text.strip()), "identifier": identifier, "report": report}
                     if d not in entries:
                         if self.verbose:
                             self.logY("\t{0}".format(d))
@@ -124,7 +128,7 @@ class mod_unfilter(Attack):
             o.append(line)
             l.append("<!-- {0} -->{1}".format(index, line))
 
-        tree = etree.HTML("\n".join(l))
+        tree = etree.HTML("\n".join(l)).getroottree()
         self.study(tree, entries=e, lines=l, parent=parent)
 
         self.settings = {"key": [], "value": [], "html": "", "extra": {}}

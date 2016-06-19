@@ -143,7 +143,7 @@ class mod_lfi(Attack):
             o.append(line)
             l.append("<!-- {0} -->{1}".format(index, line))
 
-        tree = etree.HTML("\n".join(l))
+        tree = etree.HTML("\n".join(l)).getroottree()
         self.study(tree, entries=e, lines=l, parent=parent)
 
         for elem in e:
@@ -180,13 +180,6 @@ class mod_lfi(Attack):
 
         self.settings['lficonfig']= ""
         return self.settings
-
-
-    def loadRequire(self, source, backend, dbms, obj=[]):
-        self.deps = obj
-        for x in self.deps:
-            self.settings = x.doJob(source, backend, dbms, parent=self.name)
-            x.doReturn = False
 
 
     def final(self, target_dir):

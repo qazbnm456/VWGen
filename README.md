@@ -21,18 +21,19 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 <a name="status"></a>
 ## Status quo
 
-1. Supporting very limited modules, such as [unfilter](https://www.owasp.org/index.php/Injection_Prevention_Cheat_Sheet), [SQLI](https://www.owasp.org/index.php/SQL_Injection), [NOSQLI](https://www.owasp.org/index.php/Testing_for_NoSQL_injection), [LFI](https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion) and [CRLF](https://www.owasp.org/index.php/CRLF_Injection).
-    <div align="center"><img src="http://i.imgur.com/FXDDWJk.png" /></div>
-
-2. Only two themes right now.
-    <div align="center"><img src="http://i.imgur.com/qRNyz0G.png" /></div>
-3. Python3 is not supported!
+1. Supporting very limited modules, such as [SQLI](https://www.owasp.org/index.php/SQL_Injection), [NOSQLI](https://www.owasp.org/index.php/Testing_for_NoSQL_injection), [LFI](https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion), [CRLF](https://www.owasp.org/index.php/CRLF_Injection) and [Command Injection](https://www.owasp.org/index.php/Command_Injection).
+2. There are two important modules which play essential role indeploying vulnerable web apps.
+   - *unfilter* module scrap the sites and find the keywords to be replaced by parameters.
+   - *expand* module learn the sites and try to rearrange the elements to let child modules insert there payloads within it.
+3. Only two themes right now.
+    <div align="center"><img src="http://i.imgur.com/goiRccC.png" /></div>
+4. Python3 is not supported!
 
 <a name="install"></a>
 ## Install
 
 1. Install docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
-2. Install docker-py. `pip install docker-py`
+2. Install docker-py: `pip install docker-py` and blessed: `pip install blessed`.
 3. Install lxml. `sudo apt-get install python-lxml`
 4. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
 
@@ -68,16 +69,19 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 Which types of vulnerabilities will be generated would depend on the modules you set while you start VWGen, and following are some pictures of VWGen:
 
 - `./VWGen.py --help` - Show help message.
-<div align="center"><img src="http://i.imgur.com/aTowy7Z.png" /></div>
+<div align="center"><img src="http://i.imgur.com/pewfjhK.png" /></div>
 
 - `./VWGen.py -c` - Enter console mode.
-<div align="center"><img src="http://i.imgur.com/lmGJm9L.png" /></div>
+<div align="center"><img src="http://i.imgur.com/Px0DNGD.png" /></div>
 
 - `./VWGen.py` - Start VWGen with some default arguments.
-<div align="center"><img src="http://i.imgur.com/Nb8hdqf.png" /></div>
+<div align="center"><img src="http://i.imgur.com/55RPixv.png" /></div>
 
 - `./VWGen.py --module="+sqli" --database="MySQL"` - Start VWGen with MySQL based SQL Injection.
-<div align="center"><img src="http://i.imgur.com/uReoiLh.png" /></div>
+<div align="center"><img src="http://i.imgur.com/X5m0OkO.png" /></div>
+
+- `./VWGen.py --module="+exec"` - Start VWGen with command injection vulnerability.
+<div align="center"><img src="http://i.imgur.com/Rt0er9E.png" /></div>
 
 <a name="contribute"></a>
 ## Contributing to VWGen

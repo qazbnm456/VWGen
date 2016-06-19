@@ -1,14 +1,14 @@
 {
     "identifiers": {
         "crlf": [
-            "page-top"
+            "get->page-top"
         ],
         "exec": [
             "lob_val"
         ],
         "others": [
-            "by",
-            "To Meet"
+            "get->by",
+            "get->To Meet"
         ]
     },
     "payloads"   : {

@@ -7,6 +7,26 @@ modules = ["mod_unfilter", "mod_expand", "mod_sqli", "mod_nosqli", "mod_lfi", "m
 themes = ["startbootstrap-agency-1.0.6", "startbootstrap-clean-blog-1.0.4"]
 default = "unfilter"
 
+class switch(object):
+    def __init__(self, value):
+        self.value = value
+        self.fall = False
+ 
+    def __iter__(self):
+        """Return the match method once, then stop"""
+        yield self.match
+        raise StopIteration
+     
+    def match(self, *args):
+        """Indicate whether or not to enter a case suite"""
+        if self.fall or not args:
+            return True
+        elif self.value in args: # changed for v1.5, see below
+            self.fall = True
+            return True
+        else:
+            return False
+
 class Attack(object):
     """
     This class represents an attack, it must be extended
@@ -89,6 +109,11 @@ class Attack(object):
 
     def loadRequire(self, source, backend, dbms, obj=[]):
         self.deps = obj
+        self.settings = {"html": ""}
+        self.settings['html'] = source
+        for x in self.deps:
+            self.settings = x.doJob(self.settings['html'], backend, dbms, parent=self.name)
+            x.doReturn = False
 
 
     def log(self, fmt_string, *args):

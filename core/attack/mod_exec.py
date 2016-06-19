@@ -1,4 +1,4 @@
-from core.attack.attack import Attack
+from core.attack.attack import Attack, switch
 import os
 import re
 import sys
@@ -52,9 +52,19 @@ class mod_exec(Attack):
 
     def generateHandler(self, tree_node=None, o=None, elem=None):
         if elem['type'] != "attrval":
-            o[int(elem['lineno'])-1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+            for case in switch(elem['identifier']):
+                if case('inject'):
+                    o[int(elem['lineno'])-1] = re.sub(r'(.*)<inject>(.*)</inject>(.*)', lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+                    break
+                if case():
+                    o[int(elem['lineno'])-1] = o[int(elem['lineno'])-1].replace('lob_key', self.payloads['payloads'][self.index]['target'])
         else:
-            o[int(elem['lineno'])-1] = re.sub(r'(.*)#+<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+            for case in switch(elem['identifier']):
+                if case('inject'):
+                    o[int(elem['lineno'])-1] = re.sub(r'(.*)#+<inject>(.*)</inject>(.*)', lambda m: "{0}{1}{2}".format(m.group(1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno'])-1], flags=re.IGNORECASE)
+                    break
+                if case():
+                    o[int(elem['lineno'])-1] = o[int(elem['lineno'])-1].replace('lob_key', self.payloads['payloads'][self.index]['target'])
 
 
     def doJob(self, http_res, backend, dbms, parent=None):
@@ -129,7 +139,7 @@ class mod_exec(Attack):
             o.append(line)
             l.append("<!-- {0} -->{1}".format(index, line))
 
-        tree = etree.HTML("\n".join(l))
+        tree = etree.HTML("\n".join(l)).getroottree()
         self.study(tree, entries=e, lines=l, parent=parent)
 
         for elem in e:
@@ -166,15 +176,6 @@ class mod_exec(Attack):
 
         self.settings['execconfig']= ""
         return self.settings
-
-
-    def loadRequire(self, source, backend, dbms, obj=[]):
-        self.deps = obj
-        self.settings = {"html": ""}
-        self.settings['html'] = source
-        for x in self.deps:
-            self.settings = x.doJob(self.settings['html'], backend, dbms, parent=self.name)
-            x.doReturn = False
 
 
     def final(self, target_dir):
