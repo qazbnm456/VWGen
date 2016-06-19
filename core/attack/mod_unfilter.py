@@ -68,11 +68,11 @@ class mod_unfilter(Attack):
 
     def study(self, etree_node, entries=[], lines=[], parent=None):
         for identifier in self.payloads['identifiers']["{0}".format(parent if (parent is not None and parent in self.payloads['identifiers']) else "others")]:
+            tmp_id = identifier.split('->')
+            (report, identifier) = (tmp_id[0], tmp_id[1]) if len(tmp_id) == 2 else (None, tmp_id[0])
             found_node = etree_node.xpath("//*[@*[re:test(., '{0}', 'i')] or @*[re:test(name(.), '{0}', 'i')] or re:test(local-name(),'{0}', 'i') or text()[re:test(., '{0}', 'i')]]".format(identifier), namespaces={'re': "http://exslt.org/regular-expressions"})
             if found_node is not None and len(found_node) != 0:
                 for node in found_node:
-                    tmp_id = identifier.split('->')
-                    (report, identifier) = (tmp_id[0], tmp_id[1]) if len(tmp_id) == 2 else (None, tmp_id[0])
                     if identifier in node.tag:
                         if self.verbose:
                             self.logY("Found in tag name {0}".format(node.tag))

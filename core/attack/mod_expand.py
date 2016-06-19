@@ -48,54 +48,58 @@ class mod_expand(Attack):
 
 
     def generateHandler(self, tree_node=None, o=None, elem=None):
-        base = elem["base"]
-        check = elem["check"]
-        remember = [None, None]
-        # if there is a "current" key, this value should be handled first
-        if "current" in base:
-            tmp_co = check
-            p_node = tmp_co[-1].getparent()
-            c_node = copy.deepcopy(tmp_co[-1])
-            for children in c_node.getchildren():
-                for case in switch(base["current"][self.index]['action']):
-                    if case('substitute'):
-                        remember[0] = base["current"][self.index]['vector']
-                        remember[1] = re.search(r'([a-z]{4,})(.*)(\1)', etree.tostring(children, method='html'), flags=re.IGNORECASE).groups()[0]
-                        tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(remember[0], m.groups()[1], remember[0]), etree.tostring(children, method='html'), flags=re.IGNORECASE)
-                        c_node.insert(c_node.index(children) + 1, etree.fromstring(tmp))
-                        c_node.remove(children)
-                        break
-                    if case('recreate'):
-                        c_node.insert(c_node.index(children) + 1, etree.fromstring(base["{0}".format(ele)][self.index]['vector']))
-                        c_node.remove(children)
-                        break
-                    if case():
-                        self.logR("[ERROR] Wrong format in {0}!".format(self.CONFIG_FILE))
-            p_node.insert(p_node.index(tmp_co[-1]) + 1, c_node)
-            base.pop("current", None)
-            if self.verbose:
-                self.logY("{0}".format(etree.tostring(p_node, method='html')))
-        for ele in base:
-            tmp_co = tree_node.xpath("//{0}".format(ele))
-            p_node = tmp_co[-1].getparent()
-            c_node = copy.deepcopy(tmp_co[-1])
-            for children in c_node.getchildren():
-                for case in switch(base["{0}".format(ele)][self.index]['action']):
-                    if case('substitute'):
-                        tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(base["{0}".format(ele)][self.index]['vector'], m.groups()[1], base["{0}".format(ele)][self.index]['vector']), etree.tostring(children, method='html'), flags=re.IGNORECASE)
-                        c_node.insert(c_node.index(children) + 1, etree.fromstring(tmp))
-                        c_node.remove(children)
-                        break
-                    if case('recreate'):
-                        c_node.insert(c_node.index(children) + 1, etree.fromstring(base["{0}".format(ele)][self.index]['vector']))
-                        c_node.remove(children)
-                        tmp = etree.tostring(c_node, method='html').replace(remember[1], remember[0])
-                        break
-                    if case():
-                        self.logR("[ERROR] Wrong format in {0}!".format(self.CONFIG_FILE))
-            p_node.insert(p_node.index(tmp_co[-1]) + 1, etree.fromstring(tmp))
-            if self.verbose:
-                self.logY("{0}".format(etree.tostring(p_node, method='html')))
+        try:
+            base = elem["base"]
+            check = elem["check"]
+            remember = [None, None]
+            # if there is a "current" key, this value should be handled first
+            if "current" in base:
+                tmp_co = check
+                p_node = tmp_co[-1].getparent()
+                c_node = copy.deepcopy(tmp_co[-1])
+                for children in c_node.getchildren():
+                    for case in switch(base["current"][self.index]['action']):
+                        if case('substitute'):
+                            remember[0] = base["current"][self.index]['vector']
+                            remember[1] = re.search(r'([a-z]{4,})(.*)(\1)', etree.tostring(children, method='html'), flags=re.IGNORECASE).groups()[0]
+                            tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(remember[0], m.groups()[1], remember[0]), etree.tostring(children, method='html'), flags=re.IGNORECASE)
+                            c_node.insert(c_node.index(children) + 1, etree.fromstring(tmp))
+                            c_node.remove(children)
+                            break
+                        if case('recreate'):
+                            c_node.insert(c_node.index(children) + 1, etree.fromstring(base["{0}".format(ele)][self.index]['vector']))
+                            c_node.remove(children)
+                            break
+                        if case():
+                            self.logR("[ERROR] Wrong format in {0}!".format(self.CONFIG_FILE))
+                p_node.insert(p_node.index(tmp_co[-1]) + 1, c_node)
+                base.pop("current", None)
+                if self.verbose:
+                    self.logY("{0}".format(etree.tostring(p_node, method='html')))
+            for ele in base:
+                tmp_co = tree_node.xpath("//{0}".format(ele))
+                p_node = tmp_co[-1].getparent()
+                c_node = copy.deepcopy(tmp_co[-1])
+                for children in c_node.getchildren():
+                    for case in switch(base["{0}".format(ele)][self.index]['action']):
+                        if case('substitute'):
+                            tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(base["{0}".format(ele)][self.index]['vector'], m.groups()[1], base["{0}".format(ele)][self.index]['vector']), etree.tostring(children, method='html'), flags=re.IGNORECASE)
+                            c_node.insert(c_node.index(children) + 1, etree.fromstring(tmp))
+                            c_node.remove(children)
+                            break
+                        if case('recreate'):
+                            c_node.insert(c_node.index(children) + 1, etree.fromstring(base["{0}".format(ele)][self.index]['vector']))
+                            c_node.remove(children)
+                            tmp = etree.tostring(c_node, method='html').replace(remember[1], remember[0])
+                            break
+                        if case():
+                            self.logR("[ERROR] Wrong format in {0}!".format(self.CONFIG_FILE))
+                p_node.insert(p_node.index(tmp_co[-1]) + 1, etree.fromstring(tmp))
+                if self.verbose:
+                    self.logY("{0}".format(etree.tostring(p_node, method='html')))
+        except IndexError:
+            self.logR("Cannot expand this theme, sorry...")
+            sys.exit(1)
 
 
     def doJob(self, http_res, backend, dbms, parent=None):
