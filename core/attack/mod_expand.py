@@ -36,7 +36,7 @@ class mod_expand(Attack):
 
     payloads = []
     settings = {}
-    index = random.randint(0, 0)
+    index = random.randint(0, 1)
     CONFIG_FILE = "expandPayloads.txt"
     require = []
     PRIORITY = 4
@@ -49,7 +49,7 @@ class mod_expand(Attack):
 
     def generateHandler(self, tree_node=None, o=None, elem=None):
         try:
-            base = elem["base"]
+            base = elem["base"][self.index]
             check = elem["check"]
             remember = [None, None]
             # if there is a "current" key, this value should be handled first
@@ -58,16 +58,16 @@ class mod_expand(Attack):
                 p_node = tmp_co[-1].getparent()
                 c_node = copy.deepcopy(tmp_co[-1])
                 for children in c_node.getchildren():
-                    for case in switch(base["current"][self.index]['action']):
+                    for case in switch(base["current"]['action']):
                         if case('substitute'):
-                            remember[0] = base["current"][self.index]['vector']
+                            remember[0] = base["current"]['vector']
                             remember[1] = re.search(r'([a-z]{4,})(.*)(\1)', etree.tostring(children, method='html'), flags=re.IGNORECASE).groups()[0]
                             tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(remember[0], m.groups()[1], remember[0]), etree.tostring(children, method='html'), flags=re.IGNORECASE)
                             c_node.insert(c_node.index(children) + 1, etree.fromstring(tmp))
                             c_node.remove(children)
                             break
                         if case('recreate'):
-                            c_node.insert(c_node.index(children) + 1, etree.fromstring(base["{0}".format(ele)][self.index]['vector']))
+                            c_node.insert(c_node.index(children) + 1, etree.fromstring(base["{0}".format(ele)]['vector']))
                             c_node.remove(children)
                             break
                         if case():
@@ -81,14 +81,14 @@ class mod_expand(Attack):
                 p_node = tmp_co[-1].getparent()
                 c_node = copy.deepcopy(tmp_co[-1])
                 for children in c_node.getchildren():
-                    for case in switch(base["{0}".format(ele)][self.index]['action']):
+                    for case in switch(base["{0}".format(ele)]['action']):
                         if case('substitute'):
-                            tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(base["{0}".format(ele)][self.index]['vector'], m.groups()[1], base["{0}".format(ele)][self.index]['vector']), etree.tostring(children, method='html'), flags=re.IGNORECASE)
+                            tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(base["{0}".format(ele)]['vector'], m.groups()[1], base["{0}".format(ele)]['vector']), etree.tostring(children, method='html'), flags=re.IGNORECASE)
                             c_node.insert(c_node.index(children) + 1, etree.fromstring(tmp))
                             c_node.remove(children)
                             break
                         if case('recreate'):
-                            c_node.insert(c_node.index(children) + 1, etree.fromstring(base["{0}".format(ele)][self.index]['vector']))
+                            c_node.insert(c_node.index(children) + 1, etree.fromstring(base["{0}".format(ele)]['vector']))
                             c_node.remove(children)
                             tmp = etree.tostring(c_node, method='html').replace(remember[1], remember[0])
                             break
