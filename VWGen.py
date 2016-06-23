@@ -6,11 +6,10 @@ import re
 import sys
 import json
 import optparse
-import zipfile
-import shutil
 import web
 import time
 from blessed import Terminal
+from core.file import filePointer as fp
 
 try:
     import urlparse
@@ -31,6 +30,7 @@ web.db_ctr         = None
 web.source         = None
 web.payloads       = None
 web.path           = None
+web.fp             = fp.filePointer()
 
 
 class Logger(object):
@@ -74,6 +74,7 @@ class Logger(object):
         sys.stdout.write(self.STD)
 
 
+# Load Docker
 if platform.system() == 'Darwin' or platform.system() == 'Windows':
     try:
         from docker.utils import kwargs_from_env  # TLS problem, can be referenced from https://github.com/docker/machine/issues/1335
@@ -107,7 +108,7 @@ class switch(object):
         """Indicate whether or not to enter a case suite"""
         if self.fall or not args:
             return True
-        elif self.value in args: # changed for v1.5, see below
+        elif self.value in args:
             self.fall = True
             return True
         else:
@@ -185,10 +186,8 @@ class VWGen(object):
 
     def _index__initThemeEnv(self):
         self.__initBackend()
-        with zipfile.ZipFile(self.theme_path + '.zip', "r") as z:
-            z.extractall(self.output)
-        with open(os.path.join(self.output, self.theme, "index.html"), 'rb') as src:
-            self.source = src.read()
+        web.fp.zipExtract(self.theme_path + '.zip', self.output)
+        self.source = web.fp.read(os.path.join(self.output, self.theme, "index.html"))
 
 
     def __initAttacks(self):
@@ -604,7 +603,7 @@ if __name__ == "__main__":
         Logger.logInfo("\n[INFO] Taking you to safely leave the program.")
     finally:
         try:
-            shutil.rmtree(web.path)
+            web.fp.rmtree(web.path)
             web.client.remove_container(web.db_ctr, force=True) if web.db_ctr is not None else None
             web.client.remove_container(web.ctr, force=True)
         except (TypeError, NullResource):

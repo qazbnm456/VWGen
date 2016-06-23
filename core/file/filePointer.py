@@ -1,8 +1,17 @@
 import os
 import sys
+import shutil
+import zipfile
 
 class filePointer(object):
     """Class for reading and writing files"""
+
+    pointer = ""
+
+    def __init__(self, pointer="index.html"):
+        self.pointer = pointer
+
+
     @staticmethod
     def readLines(fileName):
         """returns a array"""
@@ -25,11 +34,84 @@ class filePointer(object):
         return lines
 
 
+    @staticmethod
+    def read(fileName):
+        """returns a src object"""
+        src = None
+        f = None
+        try:
+            f = open(fileName, 'rb')
+            src = f.read()
+        except IOError, e:
+            print(e)
+        finally:
+            if f != None:
+                f.close()
+        return src
+
+
+    @staticmethod
+    def write(fileName, content):
+        """returns True if writing successfully, or False instead"""
+        f = None
+        try:
+            f = open(fileName, 'w')
+            f.write(content)
+        except IOError, e:
+            print(e)
+            return False
+        finally:
+            if f != None:
+                f.close()
+        return True
+
+
+    @staticmethod
+    def copy(srcFile, dstFile):
+        """returns True if copying successfully, or False instead"""
+        try:
+            shutil.copy(srcFile, dstFile)
+        except IOError, e:
+            print(e)
+            return False
+        return True
+
+
+    @staticmethod
+    def rmtree(path):
+        """returns True if rmtree successfully, or False instead"""
+        try:
+            shutil.rmtree(path)
+        except OSError, e:
+            print(e)
+            return False
+        return True
+
+
+    @staticmethod
+    def zipExtract(fileName, dst):
+        """returns True if zipExtract successfully, or False instead"""
+        f = None
+        try:
+            f = zipfile.ZipFile(fileName, "r")
+            f.extractall(dst)
+        except BadZipfile, e:
+            print(e)
+            return False
+        return True
+
+
+    def change(self, pointer="index.html"):
+        self.pointer = pointer
+
+
 if __name__ == "__main__":
     try:
-        l = filePointer()
-        ll = l.readLines("../config/attacks/execPayloads.txt")
-        for li in ll:
-            print(li)
+        l = filePointer(pointer="123")
+        #ll = l.readLines("../config/attacks/execPayloads.txt")
+        #for li in ll:
+        #    print(li)
+        l.change()
+        print l.pointer
     except SystemExit:
         pass

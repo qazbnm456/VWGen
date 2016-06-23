@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 from abc import ABCMeta, abstractmethod
+from core.file import filePointer as fp
 
 modules = ["mod_unfilter", "mod_expand", "mod_sqli", "mod_nosqli", "mod_lfi", "mod_crlf", "mod_exec"]
 themes = ["startbootstrap-agency-1.0.6", "startbootstrap-clean-blog-1.0.4"]
@@ -21,7 +22,7 @@ class switch(object):
         """Indicate whether or not to enter a case suite"""
         if self.fall or not args:
             return True
-        elif self.value in args: # changed for v1.5, see below
+        elif self.value in args:
             self.fall = True
             return True
         else:
@@ -74,6 +75,8 @@ class Attack(object):
         # Must be left empty in the code
         self.deps = []
 
+        self.fp = fp.filePointer()
+
 
     def setColor(self):
         self.color = 1
@@ -97,14 +100,9 @@ class Attack(object):
         pass
 
 
-    def final(self, target_dir):
-        dst = open(os.path.join(target_dir, "index.php"), 'w')
-        try:
-            dst.write(self.settings['html'])
-        finally:
-            dst.close()
-
-        shutil.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))
+    def final(self, target_dir):     
+        self.fp.write(os.path.join(target_dir, "index.php"), self.settings['html'])
+        self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))
 
 
     def loadRequire(self, source, backend, dbms, obj=[]):

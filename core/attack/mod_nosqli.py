@@ -169,13 +169,8 @@ class mod_nosqli(Attack):
 
 
     def final(self, target_dir):
-        dst = open(os.path.join(target_dir, "index.php"), 'w')
-        try:
-            dst.write('<?php require_once("{0}"); ?>\r\n{1}'.format(self.settings['dbconfig'], self.settings['html']))
-        finally:
-            dst.close()
-
-        shutil.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))
+        self.fp.write(os.path.join(target_dir, "index.php"), self.settings['html'])
+        self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))
         if self.verbose:
             self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, self.settings['dbconfig']), os.path.join(target_dir, self.settings['dbconfig'])))
-        shutil.copy(os.path.join(self.CONFIG_DIR, self.settings['dbconfig']), os.path.join(target_dir, self.settings['dbconfig']))
+        self.fp.copy(os.path.join(self.CONFIG_DIR, self.settings['dbconfig']), os.path.join(target_dir, self.settings['dbconfig']))

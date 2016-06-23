@@ -183,14 +183,8 @@ class mod_lfi(Attack):
 
 
     def final(self, target_dir):
-        dst = open(os.path.join(target_dir, "index.php"), 'w')
-        try:
-            dst.write(self.settings['html'])
-        finally:
-            dst.close()
-
-        with open(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), 'r') as f:
-            lines = f.readlines()
+        self.fp.write(os.path.join(target_dir, "index.php"), self.settings['html'])
+        lines = self.fp.readLines(os.path.join(self.CONFIG_DIR, 'php.ini.sample'))
 
         if self.payloads['payloads'][self.index]['restrict']['php.ini']:
             with open(os.path.join(target_dir, 'php.ini'), 'w') as f:
@@ -205,4 +199,4 @@ class mod_lfi(Attack):
 
         if self.verbose:
             self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, self.settings['lficonfig']), os.path.join(target_dir, self.settings['lficonfig'])))
-        shutil.copy(os.path.join(self.CONFIG_DIR, self.settings['lficonfig']), os.path.join(target_dir, self.settings['lficonfig']))
+        self.fp.copy(os.path.join(self.CONFIG_DIR, self.settings['lficonfig']), os.path.join(target_dir, self.settings['lficonfig']))
