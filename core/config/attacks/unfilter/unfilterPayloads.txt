@@ -1,0 +1,33 @@
+{
+    "identifiers": {
+        "crlf": [
+            "get->page-top"
+        ],
+        "exec": [
+            "boik_val"
+        ],
+        "others": [
+            "get->by",
+            "get->To Meet"
+        ]
+    },
+    "payloads"   : {
+        "True": [
+            {
+                "vector" : "<inject>$_GET['{0}']</inject>"
+            },
+            {
+                "vector" : "<inject>$_GET['{0}']</inject>"
+            }
+        ],
+        "False": [
+            {
+                "vector" : "<?= $_GET['{0}']; ?>"
+            },
+            {
+                "vector" : "<?= $_GET['{0}']; ?>"
+            }
+        ]
+    },
+    "revisable" : "False"
+}

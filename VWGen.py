@@ -14,23 +14,23 @@ from core.file import filePointer as fp
 try:
     import urlparse
     from urllib import urlencode
-except: # For Python 3
+except ImportError:  # For Python 3
     import urllib.parse as urlparse
     from urllib.parse import urlencode
 
 from docker import Client
-from docker.errors import *
+from docker.errors import APIError
 
 global client, ctr
-web.host           = None
-web.client         = None
+web.host = None
+web.client = None
 web.container_name = None
-web.ctr            = None
-web.db_ctr         = None
-web.source         = None
-web.payloads       = None
-web.path           = None
-web.fp             = fp.filePointer()
+web.ctr = None
+web.db_ctr = None
+web.source = None
+web.payloads = None
+web.path = None
+web.fp = fp.filePointer()
 
 
 class Logger(object):
@@ -52,20 +52,17 @@ class Logger(object):
             print(fmt_string.format(*args))
         sys.stdout.write(self.STD)
 
-
     @classmethod
     def logInfo(self, fmt_string, *args):
         sys.stdout.write(self.BLUE)
         self.log(fmt_string, *args)
         sys.stdout.write(self.STD)
 
-
     @classmethod
     def logError(self, fmt_string, *args):
         sys.stdout.write(self.RED)
         self.log(fmt_string, *args)
         sys.stdout.write(self.STD)
-
 
     @classmethod
     def logSuccess(self, fmt_string, *args):
@@ -77,8 +74,11 @@ class Logger(object):
 # Load Docker
 if platform.system() == 'Darwin' or platform.system() == 'Windows':
     try:
-        from docker.utils import kwargs_from_env  # TLS problem, can be referenced from https://github.com/docker/machine/issues/1335
-        web.host = '{0}'.format(urlparse.urlparse(os.environ['DOCKER_HOST']).netloc.split(':')[0])
+        # TLS problem, can be referenced from
+        # https://github.com/docker/machine/issues/1335
+        from docker.utils import kwargs_from_env
+        web.host = '{0}'.format(urlparse.urlparse(
+            os.environ['DOCKER_HOST']).netloc.split(':')[0])
         client = Client(base_url='{0}'.format(os.environ['DOCKER_HOST']))
         kwargs = kwargs_from_env()
         kwargs['tls'].assert_hostname = False
@@ -95,15 +95,16 @@ else:
 
 
 class switch(object):
+
     def __init__(self, value):
         self.value = value
         self.fall = False
- 
+
     def __iter__(self):
         """Return the match method once, then stop"""
         yield self.match
         raise StopIteration
-     
+
     def match(self, *args):
         """Indicate whether or not to enter a case suite"""
         if self.fall or not args:
@@ -141,7 +142,9 @@ THEME_DIR = os.path.dirname(sys.modules['demo'].__file__)
 demo = Demo()  # testing for now
 ctr = None
 
+
 class time_limit(object):
+
     def __init__(self, seconds):
         self.seconds = seconds
 
@@ -178,26 +181,26 @@ class VWGen(object):
         self.source = None
         self.craft = None
 
-
     def __initBackend(self):
         # Do Backend Environment Initialization
         self = self
 
-
     def _index__initThemeEnv(self):
         self.__initBackend()
         web.fp.zipExtract(self.theme_path + '.zip', self.output)
-        self.source = web.fp.read(os.path.join(self.output, self.theme, "index.html"))
-
+        self.source = web.fp.read(os.path.join(
+            self.output, self.theme, "index.html"))
 
     def __initAttacks(self):
         from core.attack import attack
 
         Logger.logInfo("[INFO] Loading modules:")
-        Logger.logInfo(u"[INFO] " + "\t {0}".format(u", ".join(attack.modules)))
+        Logger.logInfo(
+            u"[INFO] " + "\t {0}".format(u", ".join(attack.modules)))
 
         for mod_name in attack.modules:
-            mod = __import__("core.attack." + mod_name, fromlist=attack.modules)
+            mod = __import__("core.attack." + mod_name,
+                             fromlist=attack.modules)
             mod_instance = getattr(mod, mod_name)()
 
             self.attacks.append(mod_instance)
@@ -231,7 +234,8 @@ class VWGen(object):
                                 found = True
                                 attack_module.doReturn = False
                         if not found:
-                            Logger.logError("[ERROR] Unable to find a module named {0}".format(module))
+                            Logger.logError(
+                                "[ERROR] Unable to find a module named {0}".format(module))
 
                 # activate some modules
                 else:
@@ -240,7 +244,8 @@ class VWGen(object):
                     else:
                         module = attack.default
                     if module == "all":
-                        Logger.logError("[ERROR] Keyword 'all' was not safe enough for activating all modules at once. Specify modules names instead.")
+                        Logger.logError(
+                            "[ERROR] Keyword 'all' was not safe enough for activating all modules at once. Specify modules names instead.")
                     else:
                         found = False
                         for attack_module in self.attacks:
@@ -248,23 +253,20 @@ class VWGen(object):
                                 found = True
                                 attack_module.doReturn = True
                         if not found:
-                            Logger.logError("[ERROR] Unable to find a module named {0}".format(module))
-
+                            Logger.logError(
+                                "[ERROR] Unable to find a module named {0}".format(module))
 
     def setColor(self, default=1):
         self.color = default
         return self.color
 
-
     def setVerbose(self, default=1):
         self.verbose = default
         return self.verbose
 
-
     def setCraft(self, craft=None):
         self.craft = craft
         return self.craft
-
 
     def generate(self):
         self.__initAttacks()
@@ -274,13 +276,16 @@ class VWGen(object):
             if x.doReturn:
                 print('')
                 if x.require:
-                    x.loadRequire(self.source, self.backend, self.dbms, [y for y in self.attacks if y.name in x.require])
-                    deps = ", ".join([y.name for y in self.attacks if y.name in x.require])
+                    x.loadRequire(self.source, self.backend, self.dbms, [
+                                  y for y in self.attacks if y.name in x.require])
+                    deps = ", ".join(
+                        [y.name for y in self.attacks if y.name in x.require])
 
         for x in self.attacks:
             if x.doReturn:
                 x.logG(u"[+] Launching module {0}".format(x.name))
-                x.logG(u"   and its deps: {0}".format(deps if deps is not None else 'None'))
+                x.logG(u"   and its deps: {0}".format(
+                    deps if deps is not None else 'None'))
                 if self.color:
                     x.setColor()
                 if self.verbose:
@@ -288,10 +293,10 @@ class VWGen(object):
                 if self.craft is not None:
                     x.setCraft(self.craft)
                 target_dir = os.path.join(self.output, self.theme)
-                web.payloads = x.Job(self.source, self.backend, self.dbms, target_dir)
+                web.payloads = x.Job(
+                    self.source, self.backend, self.dbms, target_dir)
 
         return [self.output, os.path.join(self.output, self.theme)]
-
 
     def setBackend(self, backend="php"):
         if backend == "None":
@@ -311,9 +316,9 @@ class VWGen(object):
             if case():
                 Logger.logError("[ERROR] Not supported backend!")
                 self.backend = "php"
-                Logger.logInfo("[Info] set backend to {0}!".format(self.backend))
+                Logger.logInfo(
+                    "[Info] set backend to {0}!".format(self.backend))
                 return self.backend
-
 
     def setDbms(self, Dbms=None):
         if Dbms == "None":
@@ -324,33 +329,36 @@ class VWGen(object):
             if self.dbms == 'MySQL':
                 try:
                     web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
-                        environment={
-                            "MYSQL_ROOT_PASSWORD": "root_password",
-                            "MYSQL_DATABASE": "root_mysql"
-                        }
+                                                             environment={
+                        "MYSQL_ROOT_PASSWORD": "root_password",
+                        "MYSQL_DATABASE": "root_mysql"
+                    }
                     )
                 except APIError as e:
                     Logger.logError("\n" + "[ERROR] " + str(e.explanation))
                     for line in web.client.pull('mysql', tag="latest", stream=True):
-                        Logger.logInfo("[INFO] " + json.dumps(json.loads(line), indent=4))
+                        Logger.logInfo(
+                            "[INFO] " + json.dumps(json.loads(line), indent=4))
                     web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
-                        environment={
-                            "MYSQL_ROOT_PASSWORD": "root_password",
-                            "MYSQL_DATABASE": "root_mysql"
-                        }
+                                                             environment={
+                        "MYSQL_ROOT_PASSWORD": "root_password",
+                        "MYSQL_DATABASE": "root_mysql"
+                    }
                     )
                 web.client.start(web.db_ctr)
             elif self.dbms == 'Mongo':
                 try:
-                    web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
+                    web.db_ctr = web.client.create_container(
+                        image='mongo', name='{0}'.format(web.container_name))
                 except APIError as e:
                     Logger.logError("\n" + "[ERROR] " + str(e.explanation))
                     for line in web.client.pull('mongo', tag="latest", stream=True):
-                        Logger.logInfo("[INFO] " + json.dumps(json.loads(line), indent=4))
-                    web.db_ctr = web.client.create_container(image='mongo', name='{0}'.format(web.container_name))
+                        Logger.logInfo(
+                            "[INFO] " + json.dumps(json.loads(line), indent=4))
+                    web.db_ctr = web.client.create_container(
+                        image='mongo', name='{0}'.format(web.container_name))
                 web.client.start(web.db_ctr)
             return self.dbms
-
 
     def setTheme(self, theme="startbootstrap-agency-1.0.6"):
         if theme == "None":
@@ -363,7 +371,6 @@ class VWGen(object):
             self.theme_path = os.path.join(THEME_DIR, "themes", self.theme)
         return self.theme
 
-
     def setExpose(self, expose=80):
         if expose == "None":
             Logger.logError("[ERROR] Not supported expose port!")
@@ -372,7 +379,6 @@ class VWGen(object):
         else:
             self.expose = expose
         return self.expose
-
 
     def setModules(self, modules="+unfilter"):
         if modules == "None":
@@ -383,7 +389,6 @@ class VWGen(object):
             self.modules = modules
         return modules
 
-
     def showInfos(self):
         Logger.logInfo("[INFO] Backend: {0}".format(self.backend))
         Logger.logInfo("[INFO] Dbms: {0}".format(self.dbms))
@@ -393,7 +398,6 @@ class VWGen(object):
         Logger.logInfo("[INFO] Verbose: {0}".format(str(bool(self.verbose))))
         Logger.logInfo("[INFO] Craft: {0}".format(self.craft))
         Logger.logInfo("[INFO] Modules: {0}".format(self.modules))
-
 
     def parse(self, arg):
         from core.attack import attack
@@ -427,10 +431,12 @@ class VWGen(object):
                 arg = arg[4:].strip()
                 for case in switch(arg):
                     if case('modules'):
-                        Logger.logSuccess(u"{0}".format(u", ".join(attack.modules)))
+                        Logger.logSuccess(u"{0}".format(
+                            u", ".join(attack.modules)))
                         break
                     if case('themes'):
-                        Logger.logSuccess(u"{0}".format(u", ".join(attack.themes)))
+                        Logger.logSuccess(u"{0}".format(
+                            u", ".join(attack.themes)))
                         break
                     if case('infos'):
                         self.showInfos()
@@ -452,56 +458,59 @@ class VWGen(object):
         if web.payloads is not None:
             try:
                 web.ctr = web.client.create_container(image='{0}'.format(self.image), ports=[80], volumes=['{0}'.format(self.mount_point), '/etc/php5/fpm/php.ini'],
-                    host_config=web.client.create_host_config(
-                        port_bindings={
-                            80: self.expose
+                                                      host_config=web.client.create_host_config(
+                    port_bindings={
+                        80: self.expose
+                    },
+                    binds={
+                        "{0}".format(web.path): {
+                            'bind': '{0}'.format(self.mount_point),
+                            'mode': 'rw',
                         },
-                        binds={
-                            "{0}".format(web.path): {
-                                'bind': '{0}'.format(self.mount_point),
-                                'mode': 'rw',
-                            },
-                            "{0}".format(os.path.join(web.path, 'php.ini')): {
-                                'bind': '/etc/php5/fpm/php.ini',
-                                'mode': 'ro'
-                            }
-                        },
-                        links={ '{0}'.format(web.container_name): '{0}'.format(self.dbms) } if self.dbms is not None else None
-                    )
-                , name='VW')
+                        "{0}".format(os.path.join(web.path, 'php.ini')): {
+                            'bind': '/etc/php5/fpm/php.ini',
+                            'mode': 'ro'
+                        }
+                    },
+                    links={'{0}'.format(web.container_name): '{0}'.format(
+                        self.dbms)} if self.dbms is not None else None
+                ), name='VW')
             except APIError as e:
                 Logger.logError("\n" + "[ERROR] " + str(e.explanation))
                 for line in web.client.pull('{0}'.format(self.image), tag="latest", stream=True):
-                    Logger.logInfo("[INFO] " + json.dumps(json.loads(line), indent=4))
+                    Logger.logInfo(
+                        "[INFO] " + json.dumps(json.loads(line), indent=4))
                 web.ctr = web.client.create_container(image='{0}'.format(self.image), ports=[80], volumes=['{0}'.format(self.mount_point), '/etc/php5/fpm/php.ini'],
-                    host_config=web.client.create_host_config(
-                        port_bindings={
-                            80: self.expose
+                                                      host_config=web.client.create_host_config(
+                    port_bindings={
+                        80: self.expose
+                    },
+                    binds={
+                        "{0}".format(web.path): {
+                            'bind': '{0}'.format(self.mount_point),
+                            'mode': 'rw',
                         },
-                        binds={
-                            "{0}".format(web.path): {
-                                'bind': '{0}'.format(self.mount_point),
-                                'mode': 'rw',
-                            },
-                            "{0}".format(os.path.join(web.path, 'php.ini')): {
-                                'bind': '/etc/php5/fpm/php.ini',
-                                'mode': 'ro'
-                            }
-                        },
-                        links={ '{0}'.format(web.container_name): '{0}'.format(self.dbms) } if self.dbms is not None else None
-                    )
-                , name='VW')
+                        "{0}".format(os.path.join(web.path, 'php.ini')): {
+                            'bind': '/etc/php5/fpm/php.ini',
+                            'mode': 'ro'
+                        }
+                    },
+                    links={'{0}'.format(web.container_name): '{0}'.format(
+                        self.dbms)} if self.dbms is not None else None
+                ), name='VW')
 
             web.client.start(web.ctr)
 
-            url = ['http', '{0}:{1}'.format(web.host, self.expose), '/', '', '', '']
+            url = ['http', '{0}:{1}'.format(
+                web.host, self.expose), '/', '', '', '']
             params = {}
 
             if web.payloads['key'] is not None:
                 for index, _ in enumerate(web.payloads['key']):
                     if re.search("page", web.payloads['key'][index], flags=re.IGNORECASE):
                         web.payloads['value'][index] = "index"
-                    params.update({'{0}'.format(web.payloads['key'][index]): '{0}'.format(web.payloads['value'][index])})
+                    params.update({'{0}'.format(web.payloads['key'][index]): '{0}'.format(
+                        web.payloads['value'][index])})
 
             query = params
 
@@ -509,7 +518,8 @@ class VWGen(object):
 
             t = Terminal()
             with t.location(0, t.height - 1):
-                Logger.logSuccess(t.center(t.blink("Browse: {0}".format(urlparse.urlunparse(url)))))
+                Logger.logSuccess(
+                    t.center(t.blink("Browse: {0}".format(urlparse.urlunparse(url)))))
 
             with time_limit(600) as t:
                 for line in web.client.logs(web.ctr, stderr=False, stream=True):
@@ -526,36 +536,37 @@ if __name__ == "__main__":
         usage = "usage: %prog [options]"
         p = optparse.OptionParser(usage=usage, version="VWGen v0.1")
         p.add_option('--console', '-c',
-                    action="store_true", metavar='CONSOLE',
-                    help="enter console mode")
+                     action="store_true", metavar='CONSOLE',
+                     help="enter console mode")
         p.add_option('--backend',
-                    action="store", dest="backend", type="string", default="php", metavar='BACKEND',
-                    help="configure the backend (Default: php)")
+                     action="store", dest="backend", type="string", default="php", metavar='BACKEND',
+                     help="configure the backend (Default: php)")
         p.add_option('--theme',
-                    action="store", dest="theme", type="string", default="startbootstrap-agency-1.0.6", metavar='THEME',
-                    help="configure the theme (Default: startbootstrap-agency-1.0.6)")
+                     action="store", dest="theme", type="string", default="startbootstrap-agency-1.0.6", metavar='THEME',
+                     help="configure the theme (Default: startbootstrap-agency-1.0.6)")
         p.add_option('--expose',
-                    action="store", dest="expose", type="int", default=80, metavar='EXPOSE_PORT',
-                    help="configure the port of the host for container binding (Default: 80)")
+                     action="store", dest="expose", type="int", default=80, metavar='EXPOSE_PORT',
+                     help="configure the port of the host for container binding (Default: 80)")
         p.add_option('--database', '--db',
-                    action="store", dest="dbms", type="string", default=None, metavar='DBMS',
-                    help="configure the dbms for container linking")
+                     action="store", dest="dbms", type="string", default=None, metavar='DBMS',
+                     help="configure the dbms for container linking")
         p.add_option('--modules',
-                    action="store", dest="modules", default="+unfilter", metavar='LIST',
-                    help="list of modules to load (Default: +unfilter)")
+                     action="store", dest="modules", default="+unfilter", metavar='LIST',
+                     help="list of modules to load (Default: +unfilter)")
         p.add_option('--color',
-                    action="store_true", dest="color",
-                    help="set terminal color")
+                     action="store_true", dest="color",
+                     help="set terminal color")
         p.add_option('--verbose', '-v',
-                    action="store_true", dest="verbosity", metavar='LEVEL',
-                    help="set verbosity level")
-        group = optparse.OptionGroup(p, 'Under development', 'Following options are still in development!')
+                     action="store_true", dest="verbosity", metavar='LEVEL',
+                     help="set verbosity level")
+        group = optparse.OptionGroup(
+            p, 'Under development', 'Following options are still in development!')
         group.add_option('--craft',
-                    action="store", dest="craft", type="string", default=None, metavar='CRAFTING',
-                    help="craft the loopholes on your own")
+                         action="store", dest="craft", type="string", default=None, metavar='CRAFTING',
+                         help="craft the loopholes on your own")
         group.add_option('--file',
-                    action="store", dest="source", type="string", default=None, metavar='FILENAME',
-                    help="specify the file that VWGen will gonna operate on")
+                         action="store", dest="source", type="string", default=None, metavar='FILENAME',
+                         help="specify the file that VWGen will gonna operate on")
         p.add_option_group(group)
         options, arguments = p.parse_args()
 
@@ -570,18 +581,9 @@ if __name__ == "__main__":
             if options.source is not None:
                 web.source = options.source
 
-                # This is not required if you've installed pycparser into
-                # your site-packages/ with setup.py
-                #
-                sys.path.extend(['./core/pycparser'])
-                from pycparser import parse_file
+                # This is still not implemeted now
+                pass
 
-                ast = parse_file(web.source, use_cpp=True,
-                        cpp_path='gcc',
-                        cpp_args=['-E', r'-Iutils/fake_libc_include'])
-
-                ast.show()
-            
             if options.color:
                 gen.setColor()
 
@@ -594,7 +596,7 @@ if __name__ == "__main__":
             gen.setExpose(options.expose)
             gen.setModules(options.modules)
             gen.setCraft(options.craft)
-            
+
             gen.start()
     except (KeyboardInterrupt, SystemExit, RuntimeError):
         Logger.logInfo("[INFO] See you next time.")
@@ -604,7 +606,8 @@ if __name__ == "__main__":
     finally:
         try:
             web.fp.rmtree(web.path)
-            web.client.remove_container(web.db_ctr, force=True) if web.db_ctr is not None else None
+            web.client.remove_container(
+                web.db_ctr, force=True) if web.db_ctr is not None else None
             web.client.remove_container(web.ctr, force=True)
         except (TypeError, NullResource):
             pass

@@ -1,0 +1,4 @@
+// 將您的設定放入此檔案中以覆寫預設值和使用者設定。
+{
+    "python.linting.pylintArgs": ["--rcfile", "pylintrc"]
+}

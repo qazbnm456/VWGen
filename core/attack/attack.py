@@ -4,20 +4,23 @@ import shutil
 from abc import ABCMeta, abstractmethod
 from core.file import filePointer as fp
 
-modules = ["mod_unfilter", "mod_expand", "mod_sqli", "mod_nosqli", "mod_lfi", "mod_crlf", "mod_exec"]
+modules = ["mod_unfilter", "mod_expand", "mod_sqli",
+           "mod_nosqli", "mod_lfi", "mod_crlf", "mod_exec"]
 themes = ["startbootstrap-agency-1.0.6", "startbootstrap-clean-blog-1.0.4"]
 default = "unfilter"
 
+
 class switch(object):
+
     def __init__(self, value):
         self.value = value
         self.fall = False
- 
+
     def __iter__(self):
         """Return the match method once, then stop"""
         yield self.match
         raise StopIteration
-     
+
     def match(self, *args):
         """Indicate whether or not to enter a case suite"""
         if self.fall or not args:
@@ -27,6 +30,7 @@ class switch(object):
             return True
         else:
             return False
+
 
 class Attack(object):
     """
@@ -77,42 +81,37 @@ class Attack(object):
 
         self.fp = fp.filePointer()
 
-
     def setColor(self):
         self.color = 1
-
 
     def setVerbose(self):
         self.verbose = 1
 
-
     def setCraft(self, craft=None):
         self.craft = craft
-
 
     @abstractmethod
     def generateHandler(self, tree_node=None, o=None, elem=None):
         pass
 
-
     @abstractmethod
     def doJob(self, http_res, backend, dbms, parent=None):
         pass
 
-
-    def final(self, target_dir):     
-        self.fp.write(os.path.join(target_dir, "index.php"), self.settings['html'])
-        self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'), os.path.join(target_dir, 'php.ini'))
-
+    def final(self, target_dir):
+        self.fp.write(os.path.join(target_dir, "index.php"),
+                      self.settings['html'])
+        self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'),
+                     os.path.join(target_dir, 'php.ini'))
 
     def loadRequire(self, source, backend, dbms, obj=[]):
         self.deps = obj
         self.settings = {"html": ""}
         self.settings['html'] = source
         for x in self.deps:
-            self.settings = x.doJob(self.settings['html'], backend, dbms, parent=self.name)
+            self.settings = x.doJob(
+                self.settings['html'], backend, dbms, parent=self.name)
             x.doReturn = False
-
 
     def log(self, fmt_string, *args):
         if len(args) == 0:
@@ -122,54 +121,45 @@ class Attack(object):
         if self.color:
             sys.stdout.write(self.STD)
 
-
     def logR(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.RED)
         self.log(fmt_string, *args)
-
 
     def logG(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.GREEN)
         self.log(fmt_string, *args)
 
-
     def logY(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.YELLOW)
         self.log(fmt_string, *args)
-
 
     def logC(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.CYAN)
         self.log(fmt_string, *args)
 
-
     def logW(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.GB)
         self.log(fmt_string, *args)
-
 
     def logM(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.MAGENTA)
         self.log(fmt_string, *args)
 
-
     def logB(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.BLUE)
         self.log(fmt_string, *args)
 
-
     def logO(self, fmt_string, *args):
         if self.color:
             sys.stdout.write(self.ORANGE)
         self.log(fmt_string, *args)
-
 
     def Job(self, source, backend, dbms, target_dir):
         if self.doReturn == True:
@@ -178,8 +168,9 @@ class Attack(object):
                     """def foo(self, o, elem):
                             %s
                     """ % (self.craft)
-                self.generateHandler = type(self.__class__.generateHandler)(foo, self, self.__class__)
-                self.logG("[+] Your crafting has been loaded!") 
+                self.generateHandler = type(self.__class__.generateHandler)(
+                    foo, self, self.__class__)
+                self.logG("[+] Your crafting has been loaded!")
             self.settings = self.doJob(source, backend, dbms, parent=None)
             self.final(target_dir)
             return self.settings

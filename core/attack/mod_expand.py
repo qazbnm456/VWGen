@@ -13,7 +13,8 @@ except ImportError:
     sys.exit(0)
 
 try:
-    from bs4 import UnicodeDammit # BeautifulSoup 4
+    from bs4 import UnicodeDammit  # BeautifulSoup 4
+
     def decode_html(html_string):
         converted = UnicodeDammit(html_string)
         if not converted.unicode_markup:
@@ -22,7 +23,8 @@ try:
                 ', '.join(converted.tried_encodings))
         return converted.unicode_markup
 except ImportError:
-    from BeautifulSoup import UnicodeDammit # BeautifulSoup 3
+    from BeautifulSoup import UnicodeDammit  # BeautifulSoup 3
+
     def decode_html(html_string):
         converted = UnicodeDammit(html_string, isHTML=True)
         if not converted.unicode:
@@ -46,9 +48,9 @@ class mod_expand(Attack):
 
     def __init__(self):
         Attack.__init__(self)
-        self.fd = open(os.path.join(self.CONFIG_DIR, self.CONFIG_FILE), "r+")
+        self.fd = open(os.path.join(self.CONFIG_DIR,
+                                    self.name, self.CONFIG_FILE), "r+")
         self.payloads = json.load(self.fd)
-
 
     def generateHandler(self, tree_node=None, o=None, elem=None):
         try:
@@ -64,21 +66,27 @@ class mod_expand(Attack):
                     for case in switch(base["current"]['action']):
                         if case('substitute'):
                             remember[0] = base["current"]['vector']
-                            remember[1] = re.search(r'([a-z]{4,})(.*)(\1)', etree.tostring(children, method='html'), flags=re.IGNORECASE).groups()[0]
-                            tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(remember[0], m.groups()[1], remember[0]), etree.tostring(children, method='html'), flags=re.IGNORECASE)
-                            c_node.insert(c_node.index(children) + 1, etree.fromstring(tmp))
+                            remember[1] = re.search(r'([a-z]{4,})(.*)(\1)', etree.tostring(
+                                children, method='html'), flags=re.IGNORECASE).groups()[0]
+                            tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(remember[
+                                         0], m.groups()[1], remember[0]), etree.tostring(children, method='html'), flags=re.IGNORECASE)
+                            c_node.insert(c_node.index(
+                                children) + 1, etree.fromstring(tmp))
                             c_node.remove(children)
                             break
                         if case('recreate'):
-                            c_node.insert(c_node.index(children) + 1, etree.fromstring(base["{0}".format(ele)]['vector']))
+                            c_node.insert(c_node.index(
+                                children) + 1, etree.fromstring(base["{0}".format(ele)]['vector']))
                             c_node.remove(children)
                             break
                         if case():
-                            self.logR("[ERROR] Wrong format in {0}!".format(self.CONFIG_FILE))
+                            self.logR("[ERROR] Wrong format in {0}!".format(
+                                self.CONFIG_FILE))
                 p_node.insert(p_node.index(tmp_co[-1]) + 1, c_node)
                 base.pop("current", None)
                 if self.verbose:
-                    self.logY("{0}".format(etree.tostring(p_node, method='html')))
+                    self.logY("{0}".format(
+                        etree.tostring(p_node, method='html')))
             for ele in base:
                 tmp_co = tree_node.xpath("//{0}".format(ele))
                 p_node = tmp_co[-1].getparent()
@@ -86,24 +94,30 @@ class mod_expand(Attack):
                 for children in c_node.getchildren():
                     for case in switch(base["{0}".format(ele)]['action']):
                         if case('substitute'):
-                            tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(base["{0}".format(ele)]['vector'], m.groups()[1], base["{0}".format(ele)]['vector']), etree.tostring(children, method='html'), flags=re.IGNORECASE)
-                            c_node.insert(c_node.index(children) + 1, etree.fromstring(tmp))
+                            tmp = re.sub(r'({0})(.*)(\1)'.format(remember[1]), lambda m: "{0}{1}{2}".format(base["{0}".format(ele)]['vector'], m.groups()[
+                                         1], base["{0}".format(ele)]['vector']), etree.tostring(children, method='html'), flags=re.IGNORECASE)
+                            c_node.insert(c_node.index(
+                                children) + 1, etree.fromstring(tmp))
                             c_node.remove(children)
                             break
                         if case('recreate'):
-                            c_node.insert(c_node.index(children) + 1, etree.fromstring(base["{0}".format(ele)]['vector']))
+                            c_node.insert(c_node.index(
+                                children) + 1, etree.fromstring(base["{0}".format(ele)]['vector']))
                             c_node.remove(children)
-                            tmp = etree.tostring(c_node, method='html').replace(remember[1], remember[0])
+                            tmp = etree.tostring(c_node, method='html').replace(
+                                remember[1], remember[0])
                             break
                         if case():
-                            self.logR("[ERROR] Wrong format in {0}!".format(self.CONFIG_FILE))
-                p_node.insert(p_node.index(tmp_co[-1]) + 1, etree.fromstring(tmp))
+                            self.logR("[ERROR] Wrong format in {0}!".format(
+                                self.CONFIG_FILE))
+                p_node.insert(p_node.index(
+                    tmp_co[-1]) + 1, etree.fromstring(tmp))
                 if self.verbose:
-                    self.logY("{0}".format(etree.tostring(p_node, method='html')))
+                    self.logY("{0}".format(
+                        etree.tostring(p_node, method='html')))
         except IndexError:
             self.logR("Cannot expand this theme, sorry...")
             sys.exit(1)
-
 
     def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""
@@ -111,18 +125,17 @@ class mod_expand(Attack):
 
         return self.settings
 
-
-    def study(self, etree_node, entries=[], lines=[], parent=None):
+    def study(self, etree_node, entries=None, lines=None, parent=None):
         for outer in self.payloads['identifiers']:
             for inner in self.payloads['identifiers']["{0}".format(outer)]:
                 check = etree_node.xpath("//{0}//{1}".format(outer, inner))
                 if check:
-                    d = {"base": self.payloads['payloads']["{0}".format(outer)]["{0}".format(inner)], "check": check}
+                    d = {"base": self.payloads['payloads'][
+                        "{0}".format(outer)]["{0}".format(inner)], "check": check}
                     if d not in entries:
                         if self.verbose:
                             self.logY("\t{0}".format(d))
                         entries.append(d)
-
 
     # Generate payloads based on what situations we met.
     def generate_payloads(self, html_code, parent=None):
