@@ -9,24 +9,27 @@ import json
 try:
     from lxml import etree
 except ImportError:
-    try:
-        # Python 2.5
-        import xml.etree.cElementTree as etree
-    except ImportError:
-        try:
-            # Python 2.5
-            import xml.etree.ElementTree as etree
-        except ImportError:
-            try:
-                # normal cElementTree install
-                import cElementTree as etree
-            except ImportError:
-                try:
-                    # normal ElementTree install
-                    import elementtree.ElementTree as etree
-                except ImportError:
-                    print("Failed to import ElementTree from any known place")
-                    sys.exit(0)
+    print("Failed to import ElementTree from any known place")
+    sys.exit(0)
+
+try:
+    from bs4 import UnicodeDammit # BeautifulSoup 4
+    def decode_html(html_string):
+        converted = UnicodeDammit(html_string)
+        if not converted.unicode_markup:
+            raise UnicodeDecodeError(
+                "Failed to detect encoding, tried [%s]",
+                ', '.join(converted.tried_encodings))
+        return converted.unicode_markup
+except ImportError:
+    from BeautifulSoup import UnicodeDammit # BeautifulSoup 3
+    def decode_html(html_string):
+        converted = UnicodeDammit(html_string, isHTML=True)
+        if not converted.unicode:
+            raise UnicodeDecodeError(
+                "Failed to detect encoding, tried [%s]",
+                ', '.join(converted.triedEncodings))
+        return converted.unicode
 
 
 class mod_expand(Attack):
@@ -127,7 +130,7 @@ class mod_expand(Attack):
         o = []
         l = []
 
-        tree = etree.HTML(html_code).getroottree()
+        tree = etree.HTML(decode_html(html_code)).getroottree()
         self.study(tree, entries=e, lines=l, parent=parent)
 
         self.settings = {"key": [], "value": [], "html": "", "extra": {}}

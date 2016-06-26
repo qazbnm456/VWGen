@@ -33,7 +33,7 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 ## Install
 
 1. Install docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
-2. Install docker-py: `pip install docker-py` and blessed: `pip install blessed`.
+2. Install docker-py: `pip install docker-py`, blessed: `pip install blessed`, and BeautifulSoup 4: `pip install beautifulsoup4`.
 3. Install lxml. `sudo apt-get install python-lxml`
 4. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
 
