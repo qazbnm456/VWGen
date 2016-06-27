@@ -45,8 +45,8 @@ class mod_exec(Attack):
     require = ["expand", "unfilter"]
     PRIORITY = 3
 
-    def __init__(self):
-        Attack.__init__(self)
+    def __init__(self, fp=None):
+        Attack.__init__(self, fp)
         self.fd = open(os.path.join(self.CONFIG_DIR,
                                     self.name, self.CONFIG_FILE), "r+")
         self.payloads = json.load(self.fd)

@@ -45,8 +45,8 @@ class mod_lfi(Attack):
     require = ["unfilter"]
     PRIORITY = 4
 
-    def __init__(self):
-        Attack.__init__(self)
+    def __init__(self, fp=None):
+        Attack.__init__(self, fp)
         self.fd = open(os.path.join(self.CONFIG_DIR,
                                     self.name, self.CONFIG_FILE), "r+")
         self.payloads = json.load(self.fd)
@@ -65,9 +65,9 @@ class mod_lfi(Attack):
     def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""
         try:
+            self.settings['lficonfig'] = self.findRequireFiles(backend, dbms)
             self.settings = self.generate_payloads(
                 self.settings['html'], parent=parent)
-            self.settings['lficonfig'] = self.findRequireFiles(backend, dbms)
 
             if self.settings['key'] is not None:
                 for index, _ in enumerate(self.settings['key']):
@@ -202,7 +202,6 @@ class mod_lfi(Attack):
 
         self.settings['html'] = "\n".join(o)
 
-        self.settings['lficonfig'] = ""
         return self.settings
 
     def final(self, target_dir):

@@ -69,7 +69,7 @@ class Attack(object):
     # The priority of the module, from 0 (first) to 10 (last). Default is 5
     PRIORITY = 5
 
-    def __init__(self):
+    def __init__(self, fp=None):
         self.color = 0
         self.verbose = 0
         self.craft = None
@@ -79,7 +79,8 @@ class Attack(object):
         # Must be left empty in the code
         self.deps = []
 
-        self.fp = fp.filePointer()
+        if fp is not None:
+            self.fp = fp
 
     def setColor(self):
         self.color = 1

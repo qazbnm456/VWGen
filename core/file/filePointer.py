@@ -1,17 +1,37 @@
 import os
+import time
 import shutil
+import logging
 import zipfile
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+
+class ModifiedHandler(FileSystemEventHandler):
+
+    def __init__(self, fp):
+        self.fp = fp
+
+    def on_modified(self, event):
+        self.fp.setLayers(self.fp.path)
 
 
 class filePointer(object):
-    """Class for reading and writing files"""
+    """Class for reading and writing files."""
 
     pointer = ""
+    path = None
     layers = None
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
 
     def __init__(self, path=None, pointer="index.html"):
+        self.event_handler = ModifiedHandler(self)
+        self.observer = Observer()
         if path is not None:
-            self.layers = self.dig(path)
+            self.setLayers(path)
+            self.observer.schedule(self.event_handler, path, recursive=True)
         self.pointer = pointer
 
     @staticmethod
@@ -86,43 +106,33 @@ class filePointer(object):
             return False
         return True
 
-    @staticmethod
-    def zipExtract(fileName, dst):
+    def zipExtract(self, fileName, dst):
         """returns True if zipExtract successfully, or False instead"""
         f = None
         try:
             f = zipfile.ZipFile(fileName, "r")
             f.extractall(dst)
+            self.setLayers(dst)
+            self.observer.schedule(self.event_handler, dst, recursive=True)
         except zipfile.BadZipfile, e:
             print(e)
             return False
         return True
 
     def dig(self, startpath):
-        layers = {}
-        """
-        pointer = layers
-        pointer['/'] = []
-        pointer['level1'] = 0
-        for root, dirs, files in os.walk(startpath):
-            level = root.replace(startpath, '').count(os.sep)
-            indent = ' ' * 4 * (level)
-            for d in dirs:
-                pointer[d] = {'/': [], 'level1': level + 1}
-            print('{}{}/'.format(indent, os.path.basename(root)))
-            subindent = ' ' * 4 * (level + 1)
-            for f in files:
-                pointer['/'].append(f)
-                print('{}{}'.format(subindent, f))
-        """
+        self.layers = {}
         rootdir = startpath.rstrip(os.sep)
         start = rootdir.rfind(os.sep) + 1
         for path, _, files in os.walk(rootdir):
             folders = path[start:].split(os.sep)
             subdir = {file: os.path.splitext(file)[1] for file in files}
-            parent = reduce(dict.get, folders[:-1], layers)
+            parent = reduce(dict.get, folders[:-1], self.layers)
             parent[folders[-1]] = subdir
-        return layers
+
+    def setLayers(self, path):
+        if path is not None:
+            self.path = path
+            self.dig(self.path)
 
     def change(self, pointer="index.html"):
         self.pointer = pointer
@@ -130,12 +140,18 @@ class filePointer(object):
 
 if __name__ == "__main__":
     try:
-        l = filePointer(path="../config/attacks/", pointer="123")
+        l = filePointer(path="../config/attacks/exec/", pointer="123")
         #ll = l.readLines("../config/attacks/execPayloads.txt")
         # for li in ll:
         #    print(li)
-        l.change()
-        print l.pointer
-        print l.layers
+        # print l.layers
+        l.observer.start()
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            l.observer.stop()
+        l.observer.join()
+
     except SystemExit:
         pass

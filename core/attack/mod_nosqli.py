@@ -45,8 +45,8 @@ class mod_nosqli(Attack):
     require = ["unfilter"]
     PRIORITY = 4
 
-    def __init__(self):
-        Attack.__init__(self)
+    def __init__(self, fp=None):
+        Attack.__init__(self, fp)
         self.fd = open(os.path.join(self.CONFIG_DIR,
                                     self.name, self.CONFIG_FILE), "r+")
         self.payloads = json.load(self.fd)
@@ -57,18 +57,18 @@ class mod_nosqli(Attack):
     def generateHandler(self, tree_node=None, o=None, elem=None):
         if elem['type'] != "attrval":
             o[int(elem['lineno']) - 1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(
-                1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
+                1), self.payloads['payloads'][self.index]['vector'].replace('{1}', m.group(2)).format(self.settings['dbconfig']), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
         else:
             o[int(elem['lineno']) - 1] = re.sub(r'(.*)#+<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(
-                1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
+                1), self.payloads['payloads'][self.index]['vector'].replace('{1}', m.group(2)).format(self.settings['dbconfig']), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
 
     def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""
         try:
+            self.settings['dbconfig'] = self.findRequireFiles(backend, dbms)
             self.settings = self.generate_payloads(
                 self.settings['html'], parent=parent)
-            self.settings['dbconfig'] = self.findRequireFiles(backend, dbms)
-        except:
+        except KeyError:
             self.logR("ERROR!! You might forget to set DBMS variable.")
             sys.exit(0)
 
@@ -185,7 +185,6 @@ class mod_nosqli(Attack):
 
         self.settings['html'] = "\n".join(o)
 
-        self.settings['dbconfig'] = ""
         return self.settings
 
     def final(self, target_dir):

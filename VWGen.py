@@ -19,7 +19,7 @@ except ImportError:  # For Python 3
     from urllib.parse import urlencode
 
 from docker import Client
-from docker.errors import APIError
+from docker.errors import APIError, NullResource
 
 global client, ctr
 web.host = None
@@ -122,14 +122,14 @@ def enter_shell(gen):
     gen.parse("set theme   = startbootstrap-agency-1.0.6")
     gen.parse("set expose  = 80")
     gen.parse("set modules = +unfilter")
-    Logger.logInfo("VWGen ready (press Ctrl+D to end input)")
+    Logger.logInfo("VWGen ready (press Ctrl+C to end input)")
     while True:
         print ">",
         result = gen.parse(sys.stdin.readline())
         if result is not None:
             Logger.logSuccess(result)
         else:
-            sys.exit(0)
+            Logger.logError("Unreconized keyword!")
 
 
 parent_dir = os.path.abspath(os.path.join(
@@ -201,7 +201,7 @@ class VWGen(object):
         for mod_name in attack.modules:
             mod = __import__("core.attack." + mod_name,
                              fromlist=attack.modules)
-            mod_instance = getattr(mod, mod_name)()
+            mod_instance = getattr(mod, mod_name)(web.fp)
 
             self.attacks.append(mod_instance)
             self.attacks.sort(lambda a, b: a.PRIORITY - b.PRIORITY)
@@ -225,7 +225,7 @@ class VWGen(object):
                     module = module[1:]
                     if module == "all":
                         for attack_module in self.attacks:
-                            if attack_module.name in attack.lists:
+                            if attack_module.name in attack.modules:
                                 attack_module.doReturn = False
                     else:
                         found = False
@@ -413,7 +413,7 @@ class VWGen(object):
                         Logger.logSuccess("[*] unset A")
                         break
                     if case('show'):
-                        Logger.logSuccess("[*] show [modules, infos]")
+                        Logger.logSuccess("[*] show [modules, themes, infos]")
                         break
                     if case():
                         Logger.logSuccess("[*] help [set, unset, show]")
@@ -439,10 +439,20 @@ class VWGen(object):
                             u", ".join(attack.themes)))
                         break
                     if case('infos'):
-                        self.showInfos()
+                        Logger.logSuccess("Backend: {0}".format(self.backend))
+                        Logger.logSuccess("Dbms: {0}".format(self.dbms))
+                        Logger.logSuccess("Theme: {0}".format(self.theme))
+                        Logger.logSuccess(
+                            "Expose Port: {0}".format(self.expose))
+                        Logger.logSuccess(
+                            "Color: {0}".format(str(bool(self.color))))
+                        Logger.logSuccess("Verbose: {0}".format(
+                            str(bool(self.verbose))))
+                        Logger.logSuccess("Craft: {0}".format(self.craft))
+                        Logger.logSuccess("Modules: {0}".format(self.modules))
                         break
                     if case():
-                        Logger.logSuccess("[*] show [modules, infos]")
+                        Logger.logSuccess("[*] show [modules, themes, infos]")
                 return True
             elif arg.startswith("start"):
                 self.start()
@@ -452,7 +462,6 @@ class VWGen(object):
             return True
 
     def start(self):
-        self._index__initThemeEnv()
         [folder, path] = self.generate()
         web.path = path
         if web.payloads is not None:
@@ -596,20 +605,28 @@ if __name__ == "__main__":
             gen.setExpose(options.expose)
             gen.setModules(options.modules)
             gen.setCraft(options.craft)
+            gen._index__initThemeEnv()
 
-            gen.start()
-    except (KeyboardInterrupt, SystemExit, RuntimeError):
-        Logger.logInfo("[INFO] See you next time.")
-    except APIError as e:
-        Logger.logError("\n" + "[ERROR] " + str(e.explanation))
-        Logger.logInfo("\n[INFO] Taking you to safely leave the program.")
-    finally:
-        try:
-            web.fp.rmtree(web.path)
-            web.client.remove_container(
-                web.db_ctr, force=True) if web.db_ctr is not None else None
-            web.client.remove_container(web.ctr, force=True)
-        except (TypeError, NullResource):
-            pass
-        except APIError as e:
-            Logger.logError("\n" + "[ERROR] " + str(e.explanation))
+            web.fp.observer.start()
+            try:
+                gen.start()
+            except (KeyboardInterrupt, SystemExit, RuntimeError):
+                Logger.logInfo("[INFO] See you next time.")
+            except APIError as e:
+                Logger.logError("\n" + "[ERROR] " + str(e.explanation))
+                Logger.logInfo(
+                    "\n[INFO] Taking you to safely leave the program.")
+            finally:
+                web.fp.observer.stop()
+                web.fp.observer.join()
+                try:
+                    web.fp.rmtree(web.path)
+                    web.client.remove_container(
+                        web.db_ctr, force=True) if web.db_ctr is not None else None
+                    web.client.remove_container(web.ctr, force=True)
+                except (TypeError, NullResource):
+                    pass
+                except APIError as e:
+                    Logger.logError("\n" + "[ERROR] " + str(e.explanation))
+    except KeyboardInterrupt:
+        pass
