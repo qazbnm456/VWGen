@@ -203,7 +203,7 @@ class VWGen(object):
         self.__initBackend()
         web.fp.zipExtract(self.theme_path, self.output)
         self.source = web.fp.read(os.path.join(
-            self.output, self.theme, "index.html"))
+            self.output, self.theme, web.fp.findMainPointer()))
 
     def __initAttacks(self):
         from core.attack import attack
@@ -351,8 +351,9 @@ class VWGen(object):
                 except APIError as e:
                     Logger.logError("\n" + "[ERROR] " + str(e.explanation))
                     for line in web.client.pull('mysql', tag="latest", stream=True):
-                        Logger.logInfo(
-                            "[INFO] " + json.dumps(json.loads(line), indent=4))
+                        for iter in list(jsoniterparse(line)):
+                            Logger.logInfo(
+                                "[INFO] " + json.dumps(iter, indent=4))
                     web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
                                                              environment={
                         "MYSQL_ROOT_PASSWORD": "root_password",
@@ -367,8 +368,9 @@ class VWGen(object):
                 except APIError as e:
                     Logger.logError("\n" + "[ERROR] " + str(e.explanation))
                     for line in web.client.pull('mongo', tag="latest", stream=True):
-                        Logger.logInfo(
-                            "[INFO] " + json.dumps(json.loads(line), indent=4))
+                        for iter in list(jsoniterparse(line)):
+                            Logger.logInfo(
+                                "[INFO] " + json.dumps(iter, indent=4))
                     web.db_ctr = web.client.create_container(
                         image='mongo', name='{0}'.format(web.container_name))
                 web.client.start(web.db_ctr)
@@ -643,5 +645,5 @@ if __name__ == "__main__":
                     pass
                 except APIError as e:
                     Logger.logError("\n" + "[ERROR] " + str(e.explanation))
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, RuntimeError):
         pass

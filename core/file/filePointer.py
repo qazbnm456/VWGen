@@ -136,13 +136,17 @@ class filePointer(object):
 
     def change(self, pointer="index.html"):
         self.pointer = pointer
+        return self.pointer
 
     def findMainPointer(self):
         if self.root is not None:
             for ele in self.layers[self.root].values():
                 if not isinstance(ele, dict):
                     if self.layers[self.root].keys()[self.layers[self.root].values().index(ele)] in ["index.htm", "index.html", "index.php", "main.html", "main.html", "main.php"]:
-                        self.change(pointer=self.layers[self.root].keys()[self.layers[self.root].values().index(ele)])
+                        return self.change(pointer=self.layers[self.root].keys()[self.layers[self.root].values().index(ele)])
+            return self.change()
+        else:
+            raise RuntimeError
 
 
 if __name__ == "__main__":
@@ -152,13 +156,13 @@ if __name__ == "__main__":
         # for li in ll:
         #    print(li)
         # print l.layers
-        #l.observer.start()
-        #try:
+        # l.observer.start()
+        # try:
         #    while True:
         #        time.sleep(1)
-        #except KeyboardInterrupt:
+        # except KeyboardInterrupt:
         #    l.observer.stop()
-        #l.observer.join()
+        # l.observer.join()
         l.findMainPointer()
         print l.pointer
 
