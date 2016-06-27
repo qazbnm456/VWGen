@@ -1,7 +1,6 @@
 import os
 import time
 import shutil
-import logging
 import zipfile
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -19,17 +18,16 @@ class ModifiedHandler(FileSystemEventHandler):
 class filePointer(object):
     """Class for reading and writing files."""
 
-    pointer = ""
+    pointer = None
     path = None
+    root = None
     layers = None
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
 
     def __init__(self, path=None, pointer="index.html"):
         self.event_handler = ModifiedHandler(self)
         self.observer = Observer()
         if path is not None:
+            self.root = path[(path.rfind(os.sep) + 1):]
             self.setLayers(path)
             self.observer.schedule(self.event_handler, path, recursive=True)
         self.pointer = pointer
@@ -106,13 +104,15 @@ class filePointer(object):
             return False
         return True
 
-    def zipExtract(self, fileName, dst):
+    def zipExtract(self, themePath, dst):
         """returns True if zipExtract successfully, or False instead"""
         f = None
         try:
-            f = zipfile.ZipFile(fileName, "r")
+            f = zipfile.ZipFile(themePath + '.zip', "r")
             f.extractall(dst)
-            self.setLayers(dst)
+            ind = themePath.rfind(os.sep) + 1
+            self.root = themePath[ind:]
+            self.setLayers(os.path.join(dst, self.root))
             self.observer.schedule(self.event_handler, dst, recursive=True)
         except zipfile.BadZipfile, e:
             print(e)
@@ -137,21 +137,30 @@ class filePointer(object):
     def change(self, pointer="index.html"):
         self.pointer = pointer
 
+    def findMainPointer(self):
+        if self.root is not None:
+            for ele in self.layers[self.root].values():
+                if not isinstance(ele, dict):
+                    if self.layers[self.root].keys()[self.layers[self.root].values().index(ele)] in ["index.htm", "index.html", "index.php", "main.html", "main.html", "main.php"]:
+                        self.change(pointer=self.layers[self.root].keys()[self.layers[self.root].values().index(ele)])
+
 
 if __name__ == "__main__":
     try:
-        l = filePointer(path="../config/attacks/exec/", pointer="123")
+        l = filePointer(path="../config/attacks", pointer="123")
         #ll = l.readLines("../config/attacks/execPayloads.txt")
         # for li in ll:
         #    print(li)
         # print l.layers
-        l.observer.start()
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            l.observer.stop()
-        l.observer.join()
+        #l.observer.start()
+        #try:
+        #    while True:
+        #        time.sleep(1)
+        #except KeyboardInterrupt:
+        #    l.observer.stop()
+        #l.observer.join()
+        l.findMainPointer()
+        print l.pointer
 
     except SystemExit:
         pass

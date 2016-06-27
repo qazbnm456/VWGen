@@ -1,6 +1,7 @@
 {
     "preprocessing": {
-        "php": "home.php"
+        "php": "home.php",
+        "php7": "home.php"
     },
     "payloads"   : [
         {

@@ -201,7 +201,7 @@ class VWGen(object):
 
     def _index__initThemeEnv(self):
         self.__initBackend()
-        web.fp.zipExtract(self.theme_path + '.zip', self.output)
+        web.fp.zipExtract(self.theme_path, self.output)
         self.source = web.fp.read(os.path.join(
             self.output, self.theme, "index.html"))
 

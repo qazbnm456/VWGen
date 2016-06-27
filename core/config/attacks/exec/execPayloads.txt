@@ -1,6 +1,7 @@
 {
     "preprocessing": {
-        "php": "ip.php"
+        "php": "ip.php",
+        "php7": "ip.php"
     },
     "payloads"   : [
         {

@@ -1,6 +1,7 @@
 {
     "preprocessing": {
-        "php": "info.php"
+        "php": "info.php",
+        "php7": "info.php"
     },
     "payloads"   : [
         {
