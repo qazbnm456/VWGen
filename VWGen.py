@@ -32,6 +32,20 @@ web.payloads = None
 web.path = None
 web.fp = fp.filePointer()
 
+nonspace = re.compile(r'\S')
+
+
+def jsoniterparse(j):
+    decoder = json.JSONDecoder()
+    pos = 0
+    while True:
+        matched = nonspace.search(j, pos)
+        if not matched:
+            break
+        pos = matched.start()
+        decoded, pos = decoder.raw_decode(j, pos)
+        yield decoded
+
 
 class Logger(object):
 
@@ -304,13 +318,13 @@ class VWGen(object):
         self.backend = backend
         for case in switch(self.backend):
             if case('php'):
-                self.image = 'richarvey/nginx-php-fpm'
-                self.mount_point = '/usr/share/nginx/html'
+                self.image = 'richarvey/nginx-php-fpm:php5'
+                self.mount_point = '/var/www/html'
                 return self.backend
                 break
             if case('php7'):
-                self.image = 'richarvey/nginx-php-fpm:beta70'
-                self.mount_point = '/usr/share/nginx/html'
+                self.image = 'richarvey/nginx-php-fpm:php7'
+                self.mount_point = '/var/www/html'
                 return self.backend
                 break
             if case():
@@ -486,9 +500,10 @@ class VWGen(object):
                 ), name='VW')
             except APIError as e:
                 Logger.logError("\n" + "[ERROR] " + str(e.explanation))
-                for line in web.client.pull('{0}'.format(self.image), tag="latest", stream=True):
-                    Logger.logInfo(
-                        "[INFO] " + json.dumps(json.loads(line), indent=4))
+                for line in web.client.pull('{0}'.format(self.image), stream=True):
+                    for iter in list(jsoniterparse(line)):
+                        Logger.logInfo(
+                            "[INFO] " + json.dumps(iter, indent=4))
                 web.ctr = web.client.create_container(image='{0}'.format(self.image), ports=[80], volumes=['{0}'.format(self.mount_point), '/etc/php5/fpm/php.ini'],
                                                       host_config=web.client.create_host_config(
                     port_bindings={
