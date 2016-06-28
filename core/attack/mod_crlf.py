@@ -189,13 +189,13 @@ class mod_crlf(Attack):
         self.settings['crlfconfig'] = ""
         return self.settings
 
-    def final(self, target_dir):
-        self.fp.write(os.path.join(target_dir, "index.php"),
+    def final(self):
+        self.fp.write(os.path.join(self.fp.path, "index.php"),
                       self.settings['html'])
         self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'),
-                     os.path.join(target_dir, 'php.ini'))
+                     os.path.join(self.fp.path, 'php.ini'))
         if self.verbose:
             self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, self.name, self.settings[
-                      'crlfconfig']), os.path.join(target_dir, self.settings['crlfconfig'])))
+                      'crlfconfig']), os.path.join(self.fp.path, self.settings['crlfconfig'])))
         self.fp.copy(os.path.join(self.CONFIG_DIR, self.name, self.settings[
-                     'crlfconfig']), os.path.join(target_dir, self.settings['crlfconfig']))
+                     'crlfconfig']), os.path.join(self.fp.path, self.settings['crlfconfig']))

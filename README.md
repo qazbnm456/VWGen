@@ -7,18 +7,19 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 
 ---------------------------------------
 
-##**Table of contents**
+ ##**Table of contents**
 
-####*[Status quo](#status)*
-####*[Install](#install)*
-####*[Instruction](#instruction)*
-####*[In Brief](#brief)*
-####*[Contributing](#contribute)*
-####*[LICENSE](#license)*
+ ####*[Status quo](#status)*
+ ####*[Install](#install)*
+ ####*[Instruction](#instruction)*
+ ####*[In Brief](#brief)*
+ ####*[Contributing](#contribute)*
+ ####*[LICENSE](#license)*
 
 ---------------------------------------
 
 <a name="status"></a>
+
 ## Status quo
 
 1. Supporting very limited modules, such as [SQLI](https://www.owasp.org/index.php/SQL_Injection), [NOSQLI](https://www.owasp.org/index.php/Testing_for_NoSQL_injection), [LFI](https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion), [CRLF](https://www.owasp.org/index.php/CRLF_Injection) and [Command Injection](https://www.owasp.org/index.php/Command_Injection).
@@ -30,6 +31,7 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 4. Python3 is not supported!
 
 <a name="install"></a>
+
 ## Install
 
 1. Install docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
@@ -38,6 +40,7 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 4. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
 
 <a name="instruction"></a>
+
 ## Instruction
 
     Usage: VWGen.py [options]
@@ -64,6 +67,7 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
         --file=FILENAME     specify the file that VWGen will gonna operate on
 
 <a name="brief"></a>
+
 ## In Brief
 
 Which types of vulnerabilities will be generated would depend on the modules you set while you start VWGen, and following are some pictures of VWGen:
@@ -84,15 +88,17 @@ Which types of vulnerabilities will be generated would depend on the modules you
 <div align="center"><img src="http://i.imgur.com/Rt0er9E.png" /></div>
 
 <a name="contribute"></a>
+
 ## Contributing to VWGen
 
 | Linux | Windows | MacOSX |
 |------------------|---------|---------|
-| ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.11.1-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.11.1-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.11.1-blue.svg) |
+| ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.12.0-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.12.0-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.12.0-blue.svg) |
 
 Wanna enrich the possibilities that VWGen can inspire? Send pull requests or issues immediately!
 
 <a name="license"></a>
+
 ## LICENSE
 
 This project use [Apache License, Version 2.0](https://github.com/qazbnm456/VWGen/blob/master/LICENSE).

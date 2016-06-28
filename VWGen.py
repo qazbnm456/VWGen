@@ -180,7 +180,7 @@ class time_limit(object):
 
 class VWGen(object):
 
-    def __init__(self, theme=None):
+    def __init__(self):
         self.color = 0
         self.verbose = 0
         self.theme = None
@@ -197,7 +197,7 @@ class VWGen(object):
 
     def __initBackend(self):
         # Do Backend Environment Initialization
-        self = self
+        pass
 
     def _index__initThemeEnv(self):
         self.__initBackend()
@@ -306,9 +306,8 @@ class VWGen(object):
                     x.setVerbose()
                 if self.craft is not None:
                     x.setCraft(self.craft)
-                target_dir = os.path.join(self.output, self.theme)
                 web.payloads = x.Job(
-                    self.source, self.backend, self.dbms, target_dir)
+                    self.source, self.backend, self.dbms)
 
         return [self.output, os.path.join(self.output, self.theme)]
 

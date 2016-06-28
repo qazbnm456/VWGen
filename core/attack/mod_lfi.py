@@ -204,14 +204,14 @@ class mod_lfi(Attack):
 
         return self.settings
 
-    def final(self, target_dir):
-        self.fp.write(os.path.join(target_dir, "index.php"),
+    def final(self):
+        self.fp.write(os.path.join(self.fp.path, "index.php"),
                       self.settings['html'])
         lines = self.fp.readLines(os.path.join(
             self.CONFIG_DIR, 'php.ini.sample'))
 
         if self.payloads['payloads'][self.index]['restrict']['php.ini']:
-            with open(os.path.join(target_dir, 'php.ini'), 'w') as f:
+            with open(os.path.join(self.fp.path, 'php.ini'), 'w') as f:
                 for line in lines:
                     found = False
                     for key, value in self.payloads['payloads'][self.index]['restrict']['php.ini'].iteritems():
@@ -224,6 +224,6 @@ class mod_lfi(Attack):
 
         if self.verbose:
             self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, self.name, self.settings[
-                      'lficonfig']), os.path.join(target_dir, self.settings['lficonfig'])))
+                      'lficonfig']), os.path.join(self.fp.path, self.settings['lficonfig'])))
         self.fp.copy(os.path.join(self.CONFIG_DIR, self.name, self.settings[
-                     'lficonfig']), os.path.join(target_dir, self.settings['lficonfig']))
+                     'lficonfig']), os.path.join(self.fp.path, self.settings['lficonfig']))

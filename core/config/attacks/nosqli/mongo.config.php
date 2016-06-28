@@ -29,7 +29,7 @@
 	$cUsers = $db->users;
 
 	// Check if document(s) created
-	$doc = $cUsers->findOne(array('last_name' => 'Lobsiinvok'));
+	$doc = $cUsers->findOne(array('last_name' => 'Boik'));
 	
 	if(empty($doc)) {
         // Insert first object

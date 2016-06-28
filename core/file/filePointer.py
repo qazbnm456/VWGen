@@ -1,5 +1,4 @@
 import os
-import time
 import shutil
 import zipfile
 from watchdog.observers import Observer
@@ -70,12 +69,12 @@ class filePointer(object):
         return src
 
     @staticmethod
-    def write(fileName, content):
+    def write(fileName, context):
         """returns True if writing successfully, or False instead"""
         f = None
         try:
-            f = open(fileName, 'w')
-            f.write(content)
+            f = open(fileName, 'wb')
+            f.write(context)
         except IOError, e:
             print(e)
             return False
@@ -90,6 +89,15 @@ class filePointer(object):
         try:
             shutil.copy(srcFile, dstFile)
         except IOError, e:
+            print(e)
+            return False
+        return True
+
+    @staticmethod
+    def move(src, dst):
+        try:
+            shutil.move(src, dst)
+        except (IOError, os.error), e:
             print(e)
             return False
         return True
@@ -152,17 +160,10 @@ class filePointer(object):
 if __name__ == "__main__":
     try:
         l = filePointer(path="../config/attacks", pointer="123")
-        #ll = l.readLines("../config/attacks/execPayloads.txt")
+        # ll = l.readLines("../config/attacks/execPayloads.txt")
         # for li in ll:
         #    print(li)
         # print l.layers
-        # l.observer.start()
-        # try:
-        #    while True:
-        #        time.sleep(1)
-        # except KeyboardInterrupt:
-        #    l.observer.stop()
-        # l.observer.join()
         l.findMainPointer()
         print l.pointer
 

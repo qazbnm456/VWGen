@@ -61,25 +61,33 @@ class mod_exec(Attack):
                     o[int(elem['lineno']) - 1] = re.sub(r'(.*)<inject>(.*)</inject>(.*)', lambda m: "{0}{1}{2}".format(m.group(1), self.payloads[
                         'payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
                     break
-                if case():
+                if case('boik_key'):
                     o[int(elem['lineno']) - 1] = o[int(elem['lineno']) - 1].replace(
                         'boik_key', self.payloads['payloads'][self.index]['target'])
+                    if "external" in self.settings:
+                        if self.fp.move(os.path.join(self.fp.path, self.settings['external']), os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html")):
+                            self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html"), self.payloads[
+                                'payloads'][self.index]['vector'])
         else:
             for case in switch(elem['identifier']):
                 if case('inject'):
                     o[int(elem['lineno']) - 1] = re.sub(r'(.*)#+<inject>(.*)</inject>(.*)', lambda m: "{0}{1}{2}".format(m.group(1), self.payloads[
                         'payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
                     break
-                if case():
+                if case('boik_key'):
                     o[int(elem['lineno']) - 1] = o[int(elem['lineno']) - 1].replace(
                         'boik_key', self.payloads['payloads'][self.index]['target'])
+                    if "external" in self.settings:
+                        if self.fp.move(os.path.join(self.fp.path, self.settings['external']), os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html")):
+                            self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html"), self.payloads[
+                                'payloads'][self.index]['vector'])
 
     def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""
         try:
+            self.settings['execconfig'] = self.findRequireFiles(backend, dbms)
             self.settings = self.generate_payloads(
                 self.settings['html'], parent=parent)
-            self.settings['execconfig'] = self.findRequireFiles(backend, dbms)
         except:
             self.logR("ERROR!! You might forget to set Backend variable.")
             sys.exit(0)
@@ -197,16 +205,15 @@ class mod_exec(Attack):
 
         self.settings['html'] = "\n".join(o)
 
-        self.settings['execconfig'] = ""
         return self.settings
 
-    def final(self, target_dir):
-        self.fp.write(os.path.join(target_dir, "index.php"),
+    def final(self):
+        self.fp.write(os.path.join(self.fp.path, "index.php"),
                       self.settings['html'])
         self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'),
-                     os.path.join(target_dir, 'php.ini'))
+                     os.path.join(self.fp.path, 'php.ini'))
         if self.verbose:
             self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, self.name, self.settings[
-                      'execconfig']), os.path.join(target_dir, self.settings['execconfig'])))
+                      'execconfig']), os.path.join(self.fp.path, self.settings['execconfig'])))
         self.fp.copy(os.path.join(self.CONFIG_DIR, self.name, self.settings[
-                     'execconfig']), os.path.join(target_dir, self.settings['execconfig']))
+                     'execconfig']), os.path.join(self.fp.path, self.settings['execconfig']))

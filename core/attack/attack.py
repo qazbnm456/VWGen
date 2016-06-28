@@ -99,19 +99,19 @@ class Attack(object):
     def doJob(self, http_res, backend, dbms, parent=None):
         pass
 
-    def final(self, target_dir):
-        self.fp.write(os.path.join(target_dir, "index.php"),
+    def final(self):
+        self.fp.write(os.path.join(self.fp.path, "index.php"),
                       self.settings['html'])
         self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'),
-                     os.path.join(target_dir, 'php.ini'))
+                     os.path.join(self.fp.path, 'php.ini'))
 
     def loadRequire(self, source, backend, dbms, obj=[]):
         self.deps = obj
         self.settings = {"html": ""}
         self.settings['html'] = source
         for x in self.deps:
-            self.settings = x.doJob(
-                self.settings['html'], backend, dbms, parent=self.name)
+            self.settings.update(x.doJob(
+                self.settings['html'], backend, dbms, parent=self.name))
             x.doReturn = False
 
     def log(self, fmt_string, *args):
@@ -162,7 +162,7 @@ class Attack(object):
             sys.stdout.write(self.ORANGE)
         self.log(fmt_string, *args)
 
-    def Job(self, source, backend, dbms, target_dir):
+    def Job(self, source, backend, dbms):
         if self.doReturn == True:
             if self.craft is not None:
                 exec \
@@ -173,5 +173,5 @@ class Attack(object):
                     foo, self, self.__class__)
                 self.logG("[+] Your crafting has been loaded!")
             self.settings = self.doJob(source, backend, dbms, parent=None)
-            self.final(target_dir)
+            self.final()
             return self.settings
