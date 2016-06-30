@@ -90,7 +90,7 @@ class mod_exec(Attack):
                 self.settings['html'], parent=parent)
         except:
             self.logR("ERROR!! You might forget to set Backend variable.")
-            sys.exit(0)
+            raise RuntimeError
 
         return self.settings
 

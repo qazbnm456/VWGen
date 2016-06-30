@@ -636,12 +636,12 @@ if __name__ == "__main__":
                 web.fp.observer.stop()
                 web.fp.observer.join()
                 try:
-                    web.fp.rmtree(web.path)
+                    web.fp.rmtree(web.fp.path)
                     web.client.remove_container(
                         web.db_ctr, force=True) if web.db_ctr is not None else None
-                    web.client.remove_container(web.ctr, force=True)
-                except (TypeError, NullResource):
-                    pass
+                    web.client.remove_container(web.ctr, force=True)  if web.ctr is not None else None
+                except (TypeError, NullResource), e:
+                    Logger.logError("\n" + "[ERROR] " + e)
                 except APIError as e:
                     Logger.logError("\n" + "[ERROR] " + str(e.explanation))
     except (KeyboardInterrupt, RuntimeError):

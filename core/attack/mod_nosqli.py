@@ -57,10 +57,10 @@ class mod_nosqli(Attack):
     def generateHandler(self, tree_node=None, o=None, elem=None):
         if elem['type'] != "attrval":
             o[int(elem['lineno']) - 1] = re.sub(r'(.*)<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(
-                1), self.payloads['payloads'][self.index]['vector'].replace('{1}', m.group(2)).format(self.settings['dbconfig']), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
+                1), self.payloads['payloads'][self.index]['vector'].replace('{0}', self.settings['dbconfig']).replace('{1}', m.group(2)), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
         else:
             o[int(elem['lineno']) - 1] = re.sub(r'(.*)#+<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(
-                1), self.payloads['payloads'][self.index]['vector'].replace('{1}', m.group(2)).format(self.settings['dbconfig']), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
+                1), self.payloads['payloads'][self.index]['vector'].replace('{0}', self.settings['dbconfig']).replace('{1}', m.group(2)), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
 
     def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""
@@ -70,7 +70,7 @@ class mod_nosqli(Attack):
                 self.settings['html'], parent=parent)
         except KeyError, e:
             self.logR("ERROR!! You might forget to set DBMS variable.")
-            sys.exit(0)
+            raise RuntimeError
 
         return self.settings
 

@@ -87,7 +87,7 @@ class mod_lfi(Attack):
 
         except:
             self.logR("ERROR!! You might forget to set Backend variable.")
-            sys.exit(0)
+            raise RuntimeError
 
         return self.settings
 

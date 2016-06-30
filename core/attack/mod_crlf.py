@@ -70,7 +70,7 @@ class mod_crlf(Attack):
             self.settings['crlfconfig'] = self.findRequireFiles(backend, dbms)
         except:
             self.logR("ERROR!! You might forget to set Backend variable.")
-            sys.exit(0)
+            raise RuntimeError
 
         return self.settings
 
