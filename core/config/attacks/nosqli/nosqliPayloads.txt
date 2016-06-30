@@ -5,15 +5,15 @@
     "payloads"   : [
         {
             "type"  : "array-binding query",
-            "vector" : "<?= require_once('{0}'); $cUsers->findOne(array('last_name' => {1}))['last_name']; ?>"
+            "vector" : "<?php require_once('{0}'); echo $cUsers->findOne(['last_name' => {1}])['last_name']; ?>"
         },
         {
             "type"  : "JS function",
-            "vector" : "<?php require_once('{0}'); $inject = {1}; $condition = \"var data = db.users.findOne({ 'last_name': '$inject' }); return data;\"; $data = $db->execute($condition); echo $data['retval']['last_name']; ?>"
+            "vector" : "<?php require_once('{0}'); $inject = {1}; $condition = \"var data = db.users.findOne({ 'last_name': '$inject' }); return data;\"; $data = $db->command(['eval' => $condition]); echo $data->toArray()[0]['retval']['last_name']; ?>"
         },
         {
             "type"  : "JS function with $where",
-            "vector" : "<?php require_once('{0}'); $inject = {1}; $condition = \"function() { if(this.last_name == '$inject') return true; }\"; $data = $cUsers->findOne(array('$where' => $condition)); echo $data['last_name']; ?>"
+            "vector" : "<?php require_once('{0}'); $inject = {1}; $condition = \"function() { if(this.last_name == '$inject') return true; }\"; $data = $cUsers->findOne(['$where' => $condition]); echo $data['last_name']; ?>"
         }
     ]
 }

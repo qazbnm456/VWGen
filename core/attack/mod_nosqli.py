@@ -190,10 +190,13 @@ class mod_nosqli(Attack):
     def final(self):
         self.fp.write(os.path.join(self.fp.path, "index.php"),
                       self.settings['html'])
-        self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'),
-                     os.path.join(self.fp.path, 'php.ini'))
+        self.fp.write(os.path.join(self.fp.path, 'php.ini'), self.fp.read(
+            os.path.join(self.CONFIG_DIR, 'php.ini.sample')) + "extension=mongodb.so")
         if self.verbose:
             self.logY("Copy \"{0}\" to \"{1}\"".format(os.path.join(self.CONFIG_DIR, self.name, self.settings[
                       'dbconfig']), os.path.join(self.fp.path, self.settings['dbconfig'])))
         self.fp.copy(os.path.join(self.CONFIG_DIR, self.name, self.settings[
                      'dbconfig']), os.path.join(self.fp.path, self.settings['dbconfig']))
+        self.fp.copy(os.path.join(self.CONFIG_DIR, self.name,
+                                  "mongodb.so"), os.path.join(self.fp.path, "mongodb.so"))
+        self.settings['cmd'] = 'composer require "mongodb/mongodb=^1.0.0"'

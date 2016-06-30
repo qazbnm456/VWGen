@@ -1,6 +1,6 @@
 <?php
     // Configuration
-    $dbhost = 'MySQL';
+    $dbhost = 'mysql';
     $dbuser = 'root';
     $dbpass = 'root_password';
     $dbname = 'root_mysql';

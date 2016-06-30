@@ -476,6 +476,23 @@ class VWGen(object):
             Logger.logError("Undefined attribute!")
             return True
 
+    def bindsOperation(self):
+        binds = {
+            "{0}".format(web.path): {
+                'bind': '{0}'.format(self.mount_point),
+                'mode': 'rw',
+            },
+            "{0}".format(os.path.join(web.path, 'php.ini')): {
+                'bind': '/etc/php5/conf.d/php.ini',
+                'mode': 'ro'
+            },
+            "{0}".format(os.path.join(web.path, 'mongodb.so')): {
+                'bind': '/usr/lib/php5/modules/mongodb.so',
+                'mode': 'ro'
+            } if self.dbms == 'Mongo' else None
+        }
+        return {k: v for k, v in binds.items() if v}
+
     def start(self):
         [folder, path] = self.generate()
         web.path = path
@@ -486,18 +503,9 @@ class VWGen(object):
                     port_bindings={
                         80: self.expose
                     },
-                    binds={
-                        "{0}".format(web.path): {
-                            'bind': '{0}'.format(self.mount_point),
-                            'mode': 'rw',
-                        },
-                        "{0}".format(os.path.join(web.path, 'php.ini')): {
-                            'bind': '/etc/php5/fpm/php.ini',
-                            'mode': 'ro'
-                        }
-                    },
+                    binds=self.bindsOperation(),
                     links={'{0}'.format(web.container_name): '{0}'.format(
-                        self.dbms)} if self.dbms is not None else None
+                        self.dbms.lower())} if self.dbms is not None else None
                 ), name='VW')
             except APIError as e:
                 Logger.logError("\n" + "[ERROR] " + str(e.explanation))
@@ -510,21 +518,23 @@ class VWGen(object):
                     port_bindings={
                         80: self.expose
                     },
-                    binds={
-                        "{0}".format(web.path): {
-                            'bind': '{0}'.format(self.mount_point),
-                            'mode': 'rw',
-                        },
-                        "{0}".format(os.path.join(web.path, 'php.ini')): {
-                            'bind': '/etc/php5/fpm/php.ini',
-                            'mode': 'ro'
-                        }
-                    },
+                    binds=self.bindsOperation(),
                     links={'{0}'.format(web.container_name): '{0}'.format(
-                        self.dbms)} if self.dbms is not None else None
+                        self.dbms.lower())} if self.dbms is not None else None
                 ), name='VW')
 
             web.client.start(web.ctr)
+            if web.payloads['cmd']:
+                Logger.logInfo(
+                    "[INFO] " + "CMD: cd {0} && {1}".format(self.mount_point, web.payloads['cmd']))
+                with time_limit(600) as t:
+                    for line in web.client.exec_start(web.client.exec_create(web.ctr, "/bin/bash -c 'cd {0} && {1}'".format(self.mount_point, web.payloads['cmd'])), stream=True):
+                        time.sleep(0.1)
+                        Logger.logInfo("[INFO] " + line)
+                        if t.timed_out:
+                            break
+                        else:
+                            t.timed_reset
 
             url = ['http', '{0}:{1}'.format(
                 web.host, self.expose), '/', '', '', '']
@@ -639,7 +649,8 @@ if __name__ == "__main__":
                     web.fp.rmtree(web.fp.path)
                     web.client.remove_container(
                         web.db_ctr, force=True) if web.db_ctr is not None else None
-                    web.client.remove_container(web.ctr, force=True)  if web.ctr is not None else None
+                    web.client.remove_container(
+                        web.ctr, force=True) if web.ctr is not None else None
                 except (TypeError, NullResource), e:
                     Logger.logError("\n" + "[ERROR] " + e)
                 except APIError as e:
