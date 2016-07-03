@@ -1,8 +1,9 @@
 import sys
 
+
 class Logger(object):
     """Logger class"""
-    
+
     # Color codes
     STD = "\033[0;0m"
     BLUE = "\033[1;34m"

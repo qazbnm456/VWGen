@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 from core.file import filePointer as fp
 
 modules = ["mod_unfilter", "mod_expand", "mod_sqli",
-           "mod_nosqli", "mod_lfi", "mod_crlf", "mod_exec"]
+           "mod_nosqli", "mod_lfi", "mod_crlf", "mod_exec", "mod_xss"]
 themes = ["startbootstrap-agency-1.0.6", "startbootstrap-clean-blog-1.0.4"]
 default = "unfilter"
 

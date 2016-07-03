@@ -4,7 +4,7 @@ import re
 import time
 import json
 from docker import Client
-from docker.errors import APIError, NullResource
+from docker.errors import APIError, NullResource, NotFound
 from .logger import Logger
 
 try:
@@ -54,6 +54,7 @@ class dockerAgent(object):
     host = None
     client = None
     ctr = None
+    current_ctr = None
 
     def __init__(self):
         """Loading docker environments"""
@@ -85,7 +86,7 @@ class dockerAgent(object):
         try:
             self.ctr = self.client.create_container(
                 image=image, name=name, ports=ports, volumes=volumes, environment=environment, host_config=host_config)
-        except APIError as e:
+        except (TypeError, APIError), e:
             Logger.logError("\n" + "[ERROR] " + str(e.explanation))
             for line in self.client.pull(image, stream=True):
                 for iterElement in list(jsoniterparse(line)):
@@ -93,6 +94,9 @@ class dockerAgent(object):
                         "[INFO] " + json.dumps(iterElement, indent=4))
             self.ctr = self.client.create_container(
                 image=image, name=name, ports=ports, volumes=volumes, environment=environment, host_config=host_config)
+        except NullResource:
+            Logger.logError("\n" + "[ERROR] NullResource exception!")
+        self.current_ctr = self.ctr
         self.client.start(self.ctr)
         return self.ctr
 
@@ -102,29 +106,48 @@ class dockerAgent(object):
             if ctr is not None:
                 self.client.remove_container(
                     ctr, force=True)
-        except (TypeError, NullResource), e:
-            Logger.logError("\n" + "[ERROR] " + e)
-        except APIError as e:
+            else:
+                self.client.remove_container(
+                    self.current_ctr, force=True)
+        except NotFound:
+            pass
+        except (TypeError, APIError), e:
             Logger.logError("\n" + "[ERROR] " + str(e.explanation))
+        except NullResource:
+            Logger.logError("\n" + "[ERROR] NullResource exception!")
 
     def execute(self, ctr, cmd, path):
         """Execute commands for giving ctr"""
-        with time_limit(600) as t:
-            for line in self.client.exec_start(self.client.exec_create(ctr, "/bin/bash -c 'cd {0} && {1}'".format(path, cmd)), stream=True):
-                time.sleep(0.1)
-                Logger.logInfo("[INFO] " + line)
-                if t.timed_out:
-                    break
-                else:
-                    t.timed_reset
+        try:
+            with time_limit(600) as t:
+                for line in self.client.exec_start(self.client.exec_create(ctr, "/bin/bash -c 'cd {0} && {1}'".format(path, cmd)), stream=True):
+                    time.sleep(0.1)
+                    Logger.logInfo("[INFO] " + line)
+                    if t.timed_out:
+                        break
+                    else:
+                        t.timed_reset
+        except NotFound:
+            pass
+        except (TypeError, APIError), e:
+            Logger.logError("\n" + "[ERROR] " + str(e.explanation))
+        except NullResource:
+            Logger.logError("\n" + "[ERROR] NullResource exception!")
 
     def logs(self, ctr):
         """Logging collection from docker daemon"""
-        with time_limit(600) as t:
-            for line in self.client.logs(ctr, stderr=False, stream=True):
-                time.sleep(0.1)
-                Logger.logInfo("[INFO] " + line)
-                if t.timed_out:
-                    break
-                else:
-                    t.timed_reset
+        try:
+            with time_limit(600) as t:
+                for line in self.client.logs(ctr, stderr=False, stream=True):
+                    time.sleep(0.1)
+                    Logger.logInfo("[INFO] " + line)
+                    if t.timed_out:
+                        break
+                    else:
+                        t.timed_reset
+        except NotFound:
+            pass
+        except (TypeError, APIError), e:
+            Logger.logError("\n" + "[ERROR] " + str(e.explanation))
+        except NullResource:
+            Logger.logError("\n" + "[ERROR] NullResource exception!")

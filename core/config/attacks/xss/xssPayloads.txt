@@ -1,0 +1,13 @@
+{
+    "preprocessing": {
+        "php": "<?php if(empty($_GET['name'])) HEADER('Location: index.php?name=hacker'); ?>",
+        "php7": "<?php if(empty($_GET['name'])) HEADER('Location: index.php?name=hacker'); ?>"
+    },
+    "payloads"   : [
+        {
+            "type"   : "classic reflective xss attack",
+            "vector" : "<?php if(array_key_exists('name', $_GET) && $_GET['name'] != NULL) { echo '<pre>Hello ' . $_GET['name'] . '</pre>'; } ?>",
+            "target" : "echo"
+        }
+    ]
+}

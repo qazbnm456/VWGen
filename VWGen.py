@@ -98,7 +98,7 @@ class VWGen(object):
         # Do Backend Environment Initialization
         pass
 
-    def _index__initThemeEnv(self):
+    def __initThemeEnv(self):
         self.__initBackend()
         web.fp.zipExtract(self.theme_path, self.output)
         self.source = web.fp.read(os.path.join(
@@ -196,8 +196,8 @@ class VWGen(object):
 
         for x in self.attacks:
             if x.doReturn:
-                x.logG(u"[+] Launching module {0}".format(x.name))
-                x.logG(u"   and its deps: {0}".format(
+                Logger.logSuccess(u"[+] Launching module {0}".format(x.name))
+                Logger.logSuccess(u"   and its deps: {0}".format(
                     deps if deps is not None else 'None'))
                 if self.color:
                     x.setColor()
@@ -209,6 +209,9 @@ class VWGen(object):
                     self.source, self.backend, self.dbms)
 
         return os.path.join(self.output, self.theme)
+
+    def setThemeEnv(self):
+        self.__initThemeEnv()
 
     def setBackend(self, backend="php"):
         if backend == "None":
@@ -472,7 +475,7 @@ if __name__ == "__main__":
             gen.setExpose(options.expose)
             gen.setModules(options.modules)
             gen.setCraft(options.craft)
-            gen._index__initThemeEnv()
+            gen.setThemeEnv()
 
             web.fp.observer.start()
             try:

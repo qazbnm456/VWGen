@@ -14,7 +14,7 @@
                     },
                     "section": {
                         "action": ["recreate"],
-                        "vector": "<div class='container'><div class='row'>boik_val exec</div></div>"
+                        "vector": "<div class='container'><div class='row'>boik_val test</div></div>"
                     }
                 },
                 {

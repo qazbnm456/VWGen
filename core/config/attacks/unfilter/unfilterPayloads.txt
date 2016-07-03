@@ -6,6 +6,9 @@
         "exec": [
             "boik_val"
         ],
+        "xss": [
+            "boik_val"
+        ],
         "others": [
             "get->by",
             "get->To Meet"
