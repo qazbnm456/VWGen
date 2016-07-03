@@ -15,7 +15,7 @@ class ModifiedHandler(FileSystemEventHandler):
 
 
 class filePointer(object):
-    """Class for reading and writing files."""
+    """Class for manipulating files."""
 
     pointer = None
     path = None

@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-import platform
 import os
 import re
 import sys
-import json
 import optparse
 import web
 import time
 from blessed import Terminal
-from core.file import filePointer as fp
+from docker.errors import APIError
+from core.file.dockerAgent import dockerAgent
+from core.file.filePointer import filePointer
+from core.file.logger import Logger
 
 try:
     import urlparse
@@ -18,94 +19,14 @@ except ImportError:  # For Python 3
     import urllib.parse as urlparse
     from urllib.parse import urlencode
 
-from docker import Client
-from docker.errors import APIError, NullResource
-
-global client, ctr
-web.host = None
-web.client = None
 web.container_name = None
 web.ctr = None
 web.db_ctr = None
 web.source = None
 web.payloads = None
 web.path = None
-web.fp = fp.filePointer()
-
-nonspace = re.compile(r'\S')
-
-
-def jsoniterparse(j):
-    decoder = json.JSONDecoder()
-    pos = 0
-    while True:
-        matched = nonspace.search(j, pos)
-        if not matched:
-            break
-        pos = matched.start()
-        decoded, pos = decoder.raw_decode(j, pos)
-        yield decoded
-
-
-class Logger(object):
-
-    # Color codes
-    STD = "\033[0;0m"
-    BLUE = "\033[1;34m"
-    RED = "\033[0;31m"
-    GREEN = "\033[0;32m"
-
-    def __init__(self):
-        pass
-
-    @classmethod
-    def log(self, fmt_string, *args):
-        if len(args) == 0:
-            print(fmt_string)
-        else:
-            print(fmt_string.format(*args))
-        sys.stdout.write(self.STD)
-
-    @classmethod
-    def logInfo(self, fmt_string, *args):
-        sys.stdout.write(self.BLUE)
-        self.log(fmt_string, *args)
-        sys.stdout.write(self.STD)
-
-    @classmethod
-    def logError(self, fmt_string, *args):
-        sys.stdout.write(self.RED)
-        self.log(fmt_string, *args)
-        sys.stdout.write(self.STD)
-
-    @classmethod
-    def logSuccess(self, fmt_string, *args):
-        sys.stdout.write(self.GREEN)
-        self.log(fmt_string, *args)
-        sys.stdout.write(self.STD)
-
-
-# Load Docker
-if platform.system() == 'Darwin' or platform.system() == 'Windows':
-    try:
-        # TLS problem, can be referenced from
-        # https://github.com/docker/machine/issues/1335
-        from docker.utils import kwargs_from_env
-        web.host = '{0}'.format(urlparse.urlparse(
-            os.environ['DOCKER_HOST']).netloc.split(':')[0])
-        client = Client(base_url='{0}'.format(os.environ['DOCKER_HOST']))
-        kwargs = kwargs_from_env()
-        kwargs['tls'].assert_hostname = False
-        client = Client(**kwargs)
-    except KeyError:
-        web.host = '127.0.0.1'
-        client = Client(base_url='unix://var/run/docker.sock')
-    except:
-        Logger.logError("[ERROR] $DOCKER_HOST variable undefined! Exit...")
-        sys.exit(1)
-else:
-    web.host = '127.0.0.1'
-    client = Client(base_url='unix://var/run/docker.sock')
+web.dAgent = dockerAgent()
+web.fp = filePointer()
 
 
 class switch(object):
@@ -130,16 +51,16 @@ class switch(object):
             return False
 
 
-def enter_shell(gen):
-    gen.parse("set backend = php")
-    gen.parse("set dbms    = None")
-    gen.parse("set theme   = startbootstrap-agency-1.0.6")
-    gen.parse("set expose  = 80")
-    gen.parse("set modules = +unfilter")
+def enter_shell(gen_instance):
+    gen_instance.parse("set backend = php")
+    gen_instance.parse("set dbms    = None")
+    gen_instance.parse("set theme   = startbootstrap-agency-1.0.6")
+    gen_instance.parse("set expose  = 80")
+    gen_instance.parse("set modules = +unfilter")
     Logger.logInfo("VWGen ready (press Ctrl+C to end input)")
     while True:
         print ">",
-        result = gen.parse(sys.stdin.readline())
+        result = gen_instance.parse(sys.stdin.readline())
         if result is not None:
             Logger.logSuccess(result)
         else:
@@ -154,28 +75,6 @@ from demo.demo import Demo
 THEME_DIR = os.path.dirname(sys.modules['demo'].__file__)
 
 demo = Demo()  # testing for now
-ctr = None
-
-
-class time_limit(object):
-
-    def __init__(self, seconds):
-        self.seconds = seconds
-
-    def __enter__(self):
-        self.die_after = time.time() + self.seconds
-        return self
-
-    def __exit__(self, type, value, traceback):
-        pass
-
-    @property
-    def timed_reset(self):
-        self.die_after = time.time() + self.seconds
-
-    @property
-    def timed_out(self):
-        return time.time() > self.die_after
 
 
 class VWGen(object):
@@ -286,7 +185,7 @@ class VWGen(object):
         self.__initAttacks()
 
         deps = None
-        for index, x in enumerate(self.attacks):
+        for _, x in enumerate(self.attacks):
             if x.doReturn:
                 print('')
                 if x.require:
@@ -309,7 +208,7 @@ class VWGen(object):
                 web.payloads = x.Job(
                     self.source, self.backend, self.dbms)
 
-        return [self.output, os.path.join(self.output, self.theme)]
+        return os.path.join(self.output, self.theme)
 
     def setBackend(self, backend="php"):
         if backend == "None":
@@ -320,12 +219,10 @@ class VWGen(object):
                 self.image = 'richarvey/nginx-php-fpm:php5'
                 self.mount_point = '/var/www/html'
                 return self.backend
-                break
             if case('php7'):
                 self.image = 'richarvey/nginx-php-fpm:php7'
                 self.mount_point = '/var/www/html'
                 return self.backend
-                break
             if case():
                 Logger.logError("[ERROR] Not supported backend!")
                 self.backend = "php"
@@ -340,39 +237,14 @@ class VWGen(object):
         web.container_name = '{0}_ctr'.format(self.dbms)
         if self.dbms is not None:
             if self.dbms == 'MySQL':
-                try:
-                    web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
-                                                             environment={
-                        "MYSQL_ROOT_PASSWORD": "root_password",
-                        "MYSQL_DATABASE": "root_mysql"
-                    }
-                    )
-                except APIError as e:
-                    Logger.logError("\n" + "[ERROR] " + str(e.explanation))
-                    for line in web.client.pull('mysql', tag="latest", stream=True):
-                        for iter in list(jsoniterparse(line)):
-                            Logger.logInfo(
-                                "[INFO] " + json.dumps(iter, indent=4))
-                    web.db_ctr = web.client.create_container(image='mysql', name='{0}'.format(web.container_name),
-                                                             environment={
-                        "MYSQL_ROOT_PASSWORD": "root_password",
-                        "MYSQL_DATABASE": "root_mysql"
-                    }
-                    )
-                web.client.start(web.db_ctr)
+                web.db_ctr = web.dAgent.startContainer(image='mysql', name='{0}'.format(web.container_name),
+                                                       environment={
+                    "MYSQL_ROOT_PASSWORD": "root_password",
+                    "MYSQL_DATABASE": "root_mysql"
+                })
             elif self.dbms == 'Mongo':
-                try:
-                    web.db_ctr = web.client.create_container(
-                        image='mongo', name='{0}'.format(web.container_name))
-                except APIError as e:
-                    Logger.logError("\n" + "[ERROR] " + str(e.explanation))
-                    for line in web.client.pull('mongo', tag="latest", stream=True):
-                        for iter in list(jsoniterparse(line)):
-                            Logger.logInfo(
-                                "[INFO] " + json.dumps(iter, indent=4))
-                    web.db_ctr = web.client.create_container(
-                        image='mongo', name='{0}'.format(web.container_name))
-                web.client.start(web.db_ctr)
+                web.db_ctr = web.dAgent.startContainer(
+                    image='mongo', name='{0}'.format(web.container_name))
             return self.dbms
 
     def setTheme(self, theme="startbootstrap-agency-1.0.6"):
@@ -494,50 +366,27 @@ class VWGen(object):
         return {k: v for k, v in binds.items() if v}
 
     def start(self):
-        [folder, path] = self.generate()
+        path = self.generate()
         web.path = path
         if web.payloads is not None:
-            try:
-                web.ctr = web.client.create_container(image='{0}'.format(self.image), ports=[80], volumes=['{0}'.format(self.mount_point), '/etc/php5/fpm/php.ini'],
-                                                      host_config=web.client.create_host_config(
-                    port_bindings={
-                        80: self.expose
-                    },
-                    binds=self.bindsOperation(),
-                    links={'{0}'.format(web.container_name): '{0}'.format(
-                        self.dbms.lower())} if self.dbms is not None else None
-                ), name='VW')
-            except APIError as e:
-                Logger.logError("\n" + "[ERROR] " + str(e.explanation))
-                for line in web.client.pull('{0}'.format(self.image), stream=True):
-                    for iter in list(jsoniterparse(line)):
-                        Logger.logInfo(
-                            "[INFO] " + json.dumps(iter, indent=4))
-                web.ctr = web.client.create_container(image='{0}'.format(self.image), ports=[80], volumes=['{0}'.format(self.mount_point), '/etc/php5/fpm/php.ini'],
-                                                      host_config=web.client.create_host_config(
-                    port_bindings={
-                        80: self.expose
-                    },
-                    binds=self.bindsOperation(),
-                    links={'{0}'.format(web.container_name): '{0}'.format(
-                        self.dbms.lower())} if self.dbms is not None else None
-                ), name='VW')
+            web.ctr = web.dAgent.startContainer(image='{0}'.format(self.image), ports=[80], volumes=['{0}'.format(self.mount_point), '/etc/php5/fpm/php.ini'],
+                                                      host_config=web.dAgent.createHostConfig(
+                port_bindings={
+                    80: self.expose
+                },
+                binds=self.bindsOperation(),
+                links={'{0}'.format(web.container_name): '{0}'.format(
+                    self.dbms.lower())} if self.dbms is not None else None
+            ), name='VW')
 
-            web.client.start(web.ctr)
-            if web.payloads['cmd']:
+            if "cmd" in web.payloads:
                 Logger.logInfo(
                     "[INFO] " + "CMD: cd {0} && {1}".format(self.mount_point, web.payloads['cmd']))
-                with time_limit(600) as t:
-                    for line in web.client.exec_start(web.client.exec_create(web.ctr, "/bin/bash -c 'cd {0} && {1}'".format(self.mount_point, web.payloads['cmd'])), stream=True):
-                        time.sleep(0.1)
-                        Logger.logInfo("[INFO] " + line)
-                        if t.timed_out:
-                            break
-                        else:
-                            t.timed_reset
+                web.dAgent.execute(web.ctr, web.payloads[
+                                   'cmd'], self.mount_point)
 
             url = ['http', '{0}:{1}'.format(
-                web.host, self.expose), '/', '', '', '']
+                web.dAgent.host, self.expose), '/', '', '', '']
             params = {}
 
             if web.payloads['key'] is not None:
@@ -556,14 +405,7 @@ class VWGen(object):
                 Logger.logSuccess(
                     t.center(t.blink("Browse: {0}".format(urlparse.urlunparse(url)))))
 
-            with time_limit(600) as t:
-                for line in web.client.logs(web.ctr, stderr=False, stream=True):
-                    time.sleep(0.1)
-                    Logger.logInfo("[INFO] " + line)
-                    if t.timed_out:
-                        break
-                    else:
-                        t.timed_reset
+            web.dAgent.logs(web.ctr)
 
 
 if __name__ == "__main__":
@@ -606,7 +448,6 @@ if __name__ == "__main__":
         options, arguments = p.parse_args()
 
         gen = VWGen()
-        web.client = client
 
         if options.console:
             enter_shell(gen)
@@ -645,15 +486,8 @@ if __name__ == "__main__":
             finally:
                 web.fp.observer.stop()
                 web.fp.observer.join()
-                try:
-                    web.fp.rmtree(web.fp.path)
-                    web.client.remove_container(
-                        web.db_ctr, force=True) if web.db_ctr is not None else None
-                    web.client.remove_container(
-                        web.ctr, force=True) if web.ctr is not None else None
-                except (TypeError, NullResource), e:
-                    Logger.logError("\n" + "[ERROR] " + e)
-                except APIError as e:
-                    Logger.logError("\n" + "[ERROR] " + str(e.explanation))
+                web.fp.rmtree(web.fp.path)
+                web.dAgent.removeContainer(web.db_ctr)
+                web.dAgent.removeContainer(web.ctr)
     except (KeyboardInterrupt, RuntimeError):
         pass
