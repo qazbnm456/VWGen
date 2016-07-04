@@ -7,14 +7,15 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 
 ---------------------------------------
 
- ##**Table of contents**
+##**Table of contents**
 
- ####*[Status quo](#status)*
- ####*[Install](#install)*
- ####*[Instruction](#instruction)*
- ####*[In Brief](#brief)*
- ####*[Contributing](#contribute)*
- ####*[LICENSE](#license)*
+####*[Status quo](#status)*
+####*[Install](#install)*
+####*[Instruction](#instruction)*
+####*[In Brief](#brief)*
+####*[Know issues](#issue)*
+####*[Contributing](#contribute)*
+####*[LICENSE](#license)*
 
 ---------------------------------------
 
@@ -22,13 +23,13 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 
 ## Status quo
 
-1. Supporting very limited modules, such as [SQLI](https://www.owasp.org/index.php/SQL_Injection), [NOSQLI](https://www.owasp.org/index.php/Testing_for_NoSQL_injection), [LFI](https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion), [CRLF](https://www.owasp.org/index.php/CRLF_Injection) and [Command Injection](https://www.owasp.org/index.php/Command_Injection).
-2. There are two important modules which play essential role indeploying vulnerable web apps.
+1. Supporting very limited modules, such as [SQLI](https://www.owasp.org/index.php/SQL_Injection), [NOSQLI](https://www.owasp.org/index.php/Testing_for_NoSQL_injection), [LFI](https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion), [CRLF](https://www.owasp.org/index.php/CRLF_Injection), [Command Injection](https://www.owasp.org/index.php/Command_Injection) and [XSS](https://www.owasp.org/index.php/Cross-site_Scripting_(XSS)).
+2. There are two important modules which play essential role in deploying vulnerable web apps.
    - *unfilter* module scrap the sites and find the keywords to be replaced by parameters.
    - *expand* module learn the sites and try to rearrange the elements to let child modules insert there payloads within it.
 3. Only two themes right now.
     <div align="center"><img src="http://i.imgur.com/goiRccC.png" /></div>
-4. Python3 is not supported!
+4. Python3 is currently not supported!
 
 <a name="install"></a>
 
@@ -88,6 +89,13 @@ Which types of vulnerabilities will be generated would depend on the modules you
 <div align="center"><img src="http://i.imgur.com/Rt0er9E.png" /></div>
 
 <a name="contribute"></a>
+
+<a name="issue"></a>
+
+## Known issues
+
+1. [mod_expand.py](https://github.com/qazbnm456/VWGen/blob/master/core/attack/mod_expand.py) will trigger page-modification twice while it failed to expand page with first method.
+2. [mod_expand.py](https://github.com/qazbnm456/VWGen/blob/master/core/attack/mod_expand.py) can only produce .html extension now.
 
 ## Contributing to VWGen
 

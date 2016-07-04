@@ -40,7 +40,8 @@ class mod_crlf(Attack):
 
     payloads = []
     settings = {}
-    index = random.randint(0, 0)
+    highest = 0
+    index = random.randint(0, highest)
     CONFIG_FILE = "crlfPayloads.txt"
     require = ["unfilter"]
     PRIORITY = 4

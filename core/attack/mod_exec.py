@@ -40,7 +40,8 @@ class mod_exec(Attack):
 
     payloads = []
     settings = {}
-    index = random.randint(0, 0)
+    highest = 0
+    index = random.randint(0, highest)
     CONFIG_FILE = "execPayloads.txt"
     require = ["expand", "unfilter"]
     PRIORITY = 3

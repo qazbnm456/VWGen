@@ -40,7 +40,8 @@ class mod_lfi(Attack):
 
     payloads = []
     settings = {}
-    index = random.randint(0, 2)
+    highest = 2
+    index = random.randint(0, highest)
     CONFIG_FILE = "lfiPayloads.txt"
     require = ["unfilter"]
     PRIORITY = 4

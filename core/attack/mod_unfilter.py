@@ -40,7 +40,8 @@ class mod_unfilter(Attack):
 
     payloads = []
     settings = {}
-    index = random.randint(0, 1)
+    highest = 1
+    index = random.randint(0, highest)
     CONFIG_FILE = "unfilterPayloads.txt"
     require = []
     PRIORITY = 5

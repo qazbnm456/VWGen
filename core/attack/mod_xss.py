@@ -40,7 +40,8 @@ class mod_xss(Attack):
 
     payloads = []
     settings = {}
-    index = random.randint(0, 0)
+    highest = 0
+    index = random.randint(0, highest)
     CONFIG_FILE = "xssPayloads.txt"
     require = ["expand", "unfilter"]
     PRIORITY = 3
@@ -68,6 +69,7 @@ class mod_xss(Attack):
                         if self.fp.move(os.path.join(self.fp.path, self.settings['external']), os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html")):
                             self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html"), self.payloads[
                                 'payloads'][self.index]['vector'])
+                        self.settings.pop('external', None)
         else:
             for case in switch(elem['identifier']):
                 if case('inject'):
@@ -81,6 +83,7 @@ class mod_xss(Attack):
                         if self.fp.move(os.path.join(self.fp.path, self.settings['external']), os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html")):
                             self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html"), self.payloads[
                                 'payloads'][self.index]['vector'])
+                        self.settings.pop('external', None)
 
     def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""

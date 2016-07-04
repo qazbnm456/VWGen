@@ -40,7 +40,8 @@ class mod_sqli(Attack):
 
     payloads = []
     settings = {}
-    index = random.randint(0, 1)
+    highest = 1
+    index = random.randint(0, highest)
     CONFIG_FILE = "sqliPayloads.txt"
     require = ["unfilter"]
     PRIORITY = 4
