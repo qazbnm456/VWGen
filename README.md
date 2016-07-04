@@ -94,8 +94,7 @@ Which types of vulnerabilities will be generated would depend on the modules you
 
 ## Known issues
 
-1. [mod_expand.py](https://github.com/qazbnm456/VWGen/blob/master/core/attack/mod_expand.py) will trigger page-modification twice while it failed to expand page with first method.
-2. [mod_expand.py](https://github.com/qazbnm456/VWGen/blob/master/core/attack/mod_expand.py) can only produce .html extension now.
+1. [mod_expand.py](https://github.com/qazbnm456/VWGen/blob/master/core/attack/mod_expand.py) can only produce .html extension now.
 
 ## Contributing to VWGen
 

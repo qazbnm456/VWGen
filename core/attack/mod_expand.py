@@ -54,6 +54,7 @@ class mod_expand(Attack):
 
     def generateHandler(self, tree_node=None, o=None, elem=None):
         for index in xrange(self.highest + 1):
+            change = []
             try:
                 base = elem["base"][index]
                 check = elem["check"]
@@ -91,11 +92,12 @@ class mod_expand(Attack):
                                 if case():
                                     self.logR("[ERROR] Wrong format in {0}!".format(
                                         self.CONFIG_FILE))
-                    p_node.insert(p_node.index(tmp_co[-1]) + 1, c_node)
+                    state = {"p_node": p_node, "index": p_node.index(tmp_co[-1]) + 1, "node": c_node}
+                    if state not in change:
+                        if self.verbose:
+                            self.logY("\t{0}".format(state))
+                        change.append(state)
                     base.pop("current", None)
-                    if self.verbose:
-                        self.logY("{0}".format(
-                            etree.tostring(p_node, method='html')))
                 for ele in base:
                     tmp_co = tree_node.xpath("//{0}".format(ele))
                     p_node = tmp_co[-1].getparent()
@@ -126,13 +128,25 @@ class mod_expand(Attack):
                                 if case():
                                     self.logR("[ERROR] Wrong format in {0}!".format(
                                         self.CONFIG_FILE))
-                    p_node.insert(p_node.index(
-                        tmp_co[-1]) + 1, etree.fromstring(tmp))
+                    state = {"p_node": p_node, "index": p_node.index(tmp_co[-1]) + 1, "node": etree.fromstring(tmp)}
+                    if state not in change:
+                        if self.verbose:
+                            self.logY("\t{0}".format(state))
+                        change.append(state)
+                for state in change:
+                    p_node = state["p_node"]
+                    p_node.insert(state["index"], state["node"])
                     if self.verbose:
                         self.logY("{0}".format(
                             etree.tostring(p_node, method='html')))
-                    return
+                return
             except IndexError:
+                try:
+                    for state in change:
+                        p_node = state["p_node"]
+                        p_node.remove(state["node"])
+                except ValueError as e:
+                    self.logR("\n" + "[ERROR] " + str(e))
                 self.logR("Cannot expand this theme, try next...")
                 continue
 
