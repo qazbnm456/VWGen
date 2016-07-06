@@ -94,7 +94,7 @@ Which types of vulnerabilities will be generated would depend on the modules you
 
 ## Known issues
 
-1. [mod_expand.py](https://github.com/qazbnm456/VWGen/blob/master/core/attack/mod_expand.py) can produce defferent extensions, but it still user's interaction to modify source code (Warning message is provided).
+1. [mod_expand.py](https://github.com/qazbnm456/VWGen/blob/master/core/attack/mod_expand.py) can produce defferent extensions, but it still needs user's interaction to modify source code (Warning message is provided).
 
 ## Contributing to VWGen
 
