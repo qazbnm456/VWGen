@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os
 import re
@@ -387,6 +388,13 @@ class VWGen(object):
                     "[INFO] " + "CMD: cd {0} && {1}".format(self.mount_point, web.payloads['cmd']))
                 web.dAgent.execute(web.ctr, web.payloads[
                                    'cmd'], self.mount_point)
+
+            if "warning" in web.payloads:
+                for warning in web.payloads['warning']:
+                    Logger.logWarning("[WARNING] " + warning)
+            if "error" in web.payloads:
+                for error in web.payloads['error']:
+                    Logger.logError("[ERROR] " + error)
 
             url = ['http', '{0}:{1}'.format(
                 web.dAgent.host, self.expose), '/', '', '', '']

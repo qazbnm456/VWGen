@@ -66,9 +66,12 @@ class mod_xss(Attack):
                     o[int(elem['lineno']) - 1] = o[int(elem['lineno']) - 1].replace(
                         'boik_key', self.payloads['payloads'][self.index]['target'])
                     if "external" in self.settings:
-                        if self.fp.move(os.path.join(self.fp.path, self.settings['external']), os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html")):
-                            self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html"), self.payloads[
-                                'payloads'][self.index]['vector'])
+                        if self.fp.move(os.path.join(self.fp.path, self.settings['external']), os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + os.path.splitext(self.fp.target)[1])):
+                            self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target']), self.settings['xssconfig'] + "\n" + self.payloads[
+                                'payloads'][self.index]['vector'], ext=os.path.splitext(self.fp.target)[1])
+                        for i, warning in enumerate(self.settings['warning']):
+                            self.settings['warning'][i] = self.settings[
+                                'warning'][i].format(os.path.splitext(self.fp.target)[1]).replace(self.settings['external'], self.payloads['payloads'][self.index]['target'])
                         self.settings.pop('external', None)
         else:
             for case in switch(elem['identifier']):
@@ -80,9 +83,12 @@ class mod_xss(Attack):
                     o[int(elem['lineno']) - 1] = o[int(elem['lineno']) - 1].replace(
                         'boik_key', self.payloads['payloads'][self.index]['target'])
                     if "external" in self.settings:
-                        if self.fp.move(os.path.join(self.fp.path, self.settings['external']), os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html")):
-                            self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html"), self.payloads[
-                                'payloads'][self.index]['vector'])
+                        if self.fp.move(os.path.join(self.fp.path, self.settings['external']), os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + os.path.splitext(self.fp.target)[1])):
+                            self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target']), self.settings['xssconfig'] + "\n" + self.payloads[
+                                'payloads'][self.index]['vector'], ext=os.path.splitext(self.fp.target)[1])
+                        for i, warning in enumerate(self.settings['warning']):
+                            self.settings['warning'][i] = self.settings[
+                                'warning'][i].format(os.path.splitext(self.fp.target)[1]).replace(self.settings['external'], self.payloads['payloads'][self.index]['target'])
                         self.settings.pop('external', None)
 
     def doJob(self, http_res, backend, dbms, parent=None):
@@ -215,7 +221,7 @@ class mod_xss(Attack):
                      os.path.join(self.fp.path, 'php.ini'))
         if self.verbose:
             self.logY("Append \"{0}\" to the top of \"{1}\"".format(self.settings[
-                      'xssconfig'], os.path.join(self.fp.path, "index.php")))
-        self.fp.write(os.path.join(self.fp.path, "index.php"),
+                      'xssconfig'], os.path.join(self.fp.path, self.fp.target)))
+        self.fp.write(os.path.join(self.fp.path, self.fp.target),
                       self.settings[
-                      'xssconfig'] + "\n" + self.settings['html'])
+                      'xssconfig'] + "\n" + self.settings['html'], ext=None)

@@ -1,7 +1,7 @@
 {
     "preprocessing": {
-        "php": "<?php if(empty($_GET['name'])) HEADER('Location: index.php?name=hacker'); ?>",
-        "php7": "<?php if(empty($_GET['name'])) HEADER('Location: index.php?name=hacker'); ?>"
+        "php": "<?php if(empty($_GET['name'])) HEADER('Location: ?name=hacker'); ?>",
+        "php7": "<?php if(empty($_GET['name'])) HEADER('Location: ?name=hacker'); ?>"
     },
     "payloads"   : [
         {

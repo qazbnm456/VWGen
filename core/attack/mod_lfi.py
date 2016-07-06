@@ -206,8 +206,8 @@ class mod_lfi(Attack):
         return self.settings
 
     def final(self):
-        self.fp.write(os.path.join(self.fp.path, "index.php"),
-                      self.settings['html'])
+        self.fp.write(os.path.join(self.fp.path, self.fp.target),
+                      self.settings['html'], ext=None)
         lines = self.fp.readLines(os.path.join(
             self.CONFIG_DIR, 'php.ini.sample'))
 

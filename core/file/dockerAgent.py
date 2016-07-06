@@ -95,7 +95,7 @@ class dockerAgent(object):
             self.ctr = self.client.create_container(
                 image=image, name=name, ports=ports, volumes=volumes, environment=environment, host_config=host_config)
         except NullResource:
-            Logger.logError("\n" + "[ERROR] NullResource exception!")
+            pass
         self.current_ctr = self.ctr
         self.client.start(self.ctr)
         return self.ctr
@@ -109,12 +109,10 @@ class dockerAgent(object):
             else:
                 self.client.remove_container(
                     self.current_ctr, force=True)
-        except NotFound:
+        except (NotFound, NullResource):
             pass
         except (TypeError, APIError), e:
             Logger.logError("\n" + "[ERROR] " + str(e.explanation))
-        except NullResource:
-            Logger.logError("\n" + "[ERROR] NullResource exception!")
 
     def execute(self, ctr, cmd, path):
         """Execute commands for giving ctr"""
@@ -127,12 +125,10 @@ class dockerAgent(object):
                         break
                     else:
                         t.timed_reset
-        except NotFound:
+        except (NotFound, NullResource):
             pass
         except (TypeError, APIError), e:
             Logger.logError("\n" + "[ERROR] " + str(e.explanation))
-        except NullResource:
-            Logger.logError("\n" + "[ERROR] NullResource exception!")
 
     def logs(self, ctr):
         """Logging collection from docker daemon"""
@@ -145,9 +141,7 @@ class dockerAgent(object):
                         break
                     else:
                         t.timed_reset
-        except NotFound:
+        except (NotFound, NullResource):
             pass
         except (TypeError, APIError), e:
             Logger.logError("\n" + "[ERROR] " + str(e.explanation))
-        except NullResource:
-            Logger.logError("\n" + "[ERROR] NullResource exception!")

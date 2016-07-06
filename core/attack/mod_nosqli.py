@@ -189,8 +189,8 @@ class mod_nosqli(Attack):
         return self.settings
 
     def final(self):
-        self.fp.write(os.path.join(self.fp.path, "index.php"),
-                      self.settings['html'])
+        self.fp.write(os.path.join(self.fp.path, self.fp.target),
+                      self.settings['html'], ext=None)
         self.fp.write(os.path.join(self.fp.path, 'php.ini'), self.fp.read(
             os.path.join(self.CONFIG_DIR, 'php.ini.sample')) + "extension=mongodb.so")
         if self.verbose:

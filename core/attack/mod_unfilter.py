@@ -152,7 +152,8 @@ class mod_unfilter(Attack):
         tree = etree.HTML(decode_html("\n".join(l))).getroottree()
         self.study(tree, entries=e, lines=l, parent=parent)
 
-        self.settings = {"key": [], "value": [], "html": "", "extra": {}}
+        self.settings = {"key": [], "value": [], "html": "",
+                         "extra": {}, "warning": [], "error": []}
 
         for elem in e:
             # <a href="inject_point"></a>
@@ -191,5 +192,9 @@ class mod_unfilter(Attack):
                     self.generateHandler(tree_node=tree, o=o, elem=elem)
 
         self.settings['html'] = "\n".join(o)
+        if not self.settings['warning']:
+            self.settings.pop('warning', None)
+        if not self.settings['error']:
+            self.settings.pop('error', None)
 
         return self.settings

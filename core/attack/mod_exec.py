@@ -67,8 +67,9 @@ class mod_exec(Attack):
                         'boik_key', self.payloads['payloads'][self.index]['target'])
                     if "external" in self.settings:
                         if self.fp.move(os.path.join(self.fp.path, self.settings['external']), os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html")):
-                            self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html"), self.payloads[
+                            self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target']), self.payloads[
                                 'payloads'][self.index]['vector'])
+                        self.settings.pop('external', None)
         else:
             for case in switch(elem['identifier']):
                 if case('inject'):
@@ -80,8 +81,9 @@ class mod_exec(Attack):
                         'boik_key', self.payloads['payloads'][self.index]['target'])
                     if "external" in self.settings:
                         if self.fp.move(os.path.join(self.fp.path, self.settings['external']), os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html")):
-                            self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target'] + ".html"), self.payloads[
+                            self.fp.write(os.path.join(self.fp.path, self.payloads['payloads'][self.index]['target']), self.payloads[
                                 'payloads'][self.index]['vector'])
+                        self.settings.pop('external', None)
 
     def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""
@@ -209,8 +211,8 @@ class mod_exec(Attack):
         return self.settings
 
     def final(self):
-        self.fp.write(os.path.join(self.fp.path, "index.php"),
-                      self.settings['html'])
+        self.fp.write(os.path.join(self.fp.path, self.fp.target),
+                      self.settings['html'], ext=None)
         self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'),
                      os.path.join(self.fp.path, 'php.ini'))
         if self.verbose:

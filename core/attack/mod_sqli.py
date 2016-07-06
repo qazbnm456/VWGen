@@ -189,8 +189,8 @@ class mod_sqli(Attack):
         return self.settings
 
     def final(self):
-        self.fp.write(os.path.join(self.fp.path, "index.php"),
-                      self.settings['html'])
+        self.fp.write(os.path.join(self.fp.path, self.fp.target),
+                      self.settings['html'], ext=None)
         self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'),
                      os.path.join(self.fp.path, 'php.ini'))
         if self.verbose:

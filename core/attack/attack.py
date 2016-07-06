@@ -1,8 +1,6 @@
 import os
 import sys
-import shutil
 from abc import ABCMeta, abstractmethod
-from core.file import filePointer as fp
 
 modules = ["mod_unfilter", "mod_expand", "mod_sqli",
            "mod_nosqli", "mod_lfi", "mod_crlf", "mod_exec", "mod_xss"]
@@ -100,8 +98,8 @@ class Attack(object):
         pass
 
     def final(self):
-        self.fp.write(os.path.join(self.fp.path, "index.php"),
-                      self.settings['html'])
+        self.fp.write(os.path.join(self.fp.path, self.fp.target),
+                      self.settings['html'], ext=None)
         self.fp.copy(os.path.join(self.CONFIG_DIR, 'php.ini.sample'),
                      os.path.join(self.fp.path, 'php.ini'))
 
@@ -166,7 +164,7 @@ class Attack(object):
         if self.doReturn == True:
             if self.craft is not None:
                 exec \
-                    """def foo(self, o, elem):
+                    """def foo(self, tree_node, o, elem):
                             %s
                     """ % (self.craft)
                 self.generateHandler = type(self.__class__.generateHandler)(

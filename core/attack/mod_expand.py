@@ -85,14 +85,17 @@ class mod_expand(Attack):
                                     break
                                 if case('external'):
                                     self.fp.write(os.path.join(
-                                        self.fp.path, remember[0] + ".html"), '')
+                                        self.fp.path, remember[0]), '', ext=None)
                                     self.settings['external'] = remember[
-                                        0] + ".html"
+                                        0]
+                                    self.settings['warning'].append(
+                                        "You might want to change extension of link \"{0}\" to \"{1}\" in {2}".format(self.settings['external'], "{0}", self.fp.target))
                                     break
                                 if case():
                                     self.logR("[ERROR] Wrong format in {0}!".format(
                                         self.CONFIG_FILE))
-                    state = {"p_node": p_node, "index": p_node.index(tmp_co[-1]) + 1, "node": c_node}
+                    state = {"p_node": p_node, "index": p_node.index(
+                        tmp_co[-1]) + 1, "node": c_node}
                     if state not in change:
                         if self.verbose:
                             self.logY("\t{0}".format(state))
@@ -121,14 +124,17 @@ class mod_expand(Attack):
                                     break
                                 if case('external'):
                                     self.fp.write(os.path.join(
-                                        self.fp.path, remember[1] + ".html"), '')
+                                        self.fp.path, remember[1]), '', ext=None)
                                     self.settings['external'] = remember[
-                                        1] + ".html"
+                                        1]
+                                    self.settings['warning'].append(
+                                        "You might want to change extension of link \"{0}\" to \"{1}\" in {2}".format(self.settings['external'], "{0}", self.fp.target))
                                     break
                                 if case():
                                     self.logR("[ERROR] Wrong format in {0}!".format(
                                         self.CONFIG_FILE))
-                    state = {"p_node": p_node, "index": p_node.index(tmp_co[-1]) + 1, "node": etree.fromstring(tmp)}
+                    state = {"p_node": p_node, "index": p_node.index(
+                        tmp_co[-1]) + 1, "node": etree.fromstring(tmp)}
                     if state not in change:
                         if self.verbose:
                             self.logY("\t{0}".format(state))
@@ -177,11 +183,16 @@ class mod_expand(Attack):
         tree = etree.HTML(decode_html(html_code)).getroottree()
         self.study(tree, entries=e, lines=l, parent=parent)
 
-        self.settings = {"key": [], "value": [], "html": "", "extra": {}}
+        self.settings = {"key": [], "value": [], "html": "",
+                         "extra": {}, "warning": [], "error": []}
 
         for elem in e:
             self.generateHandler(tree_node=tree, o=o, elem=elem)
 
         self.settings['html'] = etree.tostring(tree, method='html')
+        if not self.settings['warning']:
+            self.settings.pop('warning', None)
+        if not self.settings['error']:
+            self.settings.pop('error', None)
 
         return self.settings

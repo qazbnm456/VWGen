@@ -9,6 +9,7 @@ class Logger(object):
     BLUE = "\033[1;34m"
     RED = "\033[0;31m"
     GREEN = "\033[0;32m"
+    YELLOW = "\033[1;33m"
 
     def __init__(self):
         pass
@@ -24,6 +25,12 @@ class Logger(object):
     @classmethod
     def logInfo(self, fmt_string, *args):
         sys.stdout.write(self.BLUE)
+        self.log(fmt_string, *args)
+        sys.stdout.write(self.STD)
+
+    @classmethod
+    def logWarning(self, fmt_string, *args):
+        sys.stdout.write(self.YELLOW)
         self.log(fmt_string, *args)
         sys.stdout.write(self.STD)
 

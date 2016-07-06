@@ -18,11 +18,12 @@ class filePointer(object):
     """Class for manipulating files."""
 
     pointer = None
+    target = None
     path = None
     root = None
     layers = None
 
-    def __init__(self, path=None, pointer="index.html"):
+    def __init__(self, path=None, pointer="index.html", target="index.php"):
         self.event_handler = ModifiedHandler(self)
         self.observer = Observer()
         if path is not None:
@@ -30,6 +31,7 @@ class filePointer(object):
             self.setLayers(path)
             self.observer.schedule(self.event_handler, path, recursive=True)
         self.pointer = pointer
+        self.target = target
 
     @staticmethod
     def readLines(fileName):
@@ -69,11 +71,14 @@ class filePointer(object):
         return src
 
     @staticmethod
-    def write(fileName, context):
+    def write(fileName, context, ext=".html"):
         """returns True if writing successfully, or False instead"""
         f = None
         try:
-            f = open(fileName, 'wb')
+            if ext is not None:
+                f = open(os.path.splitext(fileName)[0] + ext, 'wb')
+            else:
+                f = open(fileName, 'wb')
             f.write(context)
         except IOError, e:
             print(e)
@@ -142,17 +147,21 @@ class filePointer(object):
             self.path = path
             self.dig(self.path)
 
-    def change(self, pointer="index.html"):
+    def changePointer(self, pointer="index.html"):
         self.pointer = pointer
         return self.pointer
+
+    def changeTarget(self, target="index.html"):
+        self.target = target
+        return self.target
 
     def findMainPointer(self):
         if self.root is not None:
             for ele in self.layers[self.root].values():
                 if not isinstance(ele, dict):
                     if self.layers[self.root].keys()[self.layers[self.root].values().index(ele)] in ["index.htm", "index.html", "index.php", "main.html", "main.html", "main.php"]:
-                        return self.change(pointer=self.layers[self.root].keys()[self.layers[self.root].values().index(ele)])
-            return self.change()
+                        return self.changePointer(pointer=self.layers[self.root].keys()[self.layers[self.root].values().index(ele)])
+            return self.changePointer()
         else:
             raise RuntimeError
 
@@ -166,6 +175,7 @@ if __name__ == "__main__":
         # print l.layers
         l.findMainPointer()
         print l.pointer
+        print l.target
 
     except SystemExit:
         pass
