@@ -29,7 +29,8 @@ class filePointer(object):
         if path is not None:
             self.root = path[(path.rfind(os.sep) + 1):]
             self.setLayers(path)
-            self.observer.schedule(self.event_handler, path, recursive=True)
+            self.observer.schedule(
+                self.event_handler, self.path, recursive=True)
         self.pointer = pointer
         self.target = target
 
@@ -126,7 +127,8 @@ class filePointer(object):
             ind = themePath.rfind(os.sep) + 1
             self.root = themePath[ind:]
             self.setLayers(os.path.join(dst, self.root))
-            self.observer.schedule(self.event_handler, dst, recursive=True)
+            self.observer.schedule(
+                self.event_handler, self.path, recursive=True)
         except zipfile.BadZipfile, e:
             print(e)
             return False
@@ -164,6 +166,10 @@ class filePointer(object):
             return self.changePointer()
         else:
             raise RuntimeError
+
+    def cleanObserver(self):
+        self.observer.unschedule_all()
+        self.observer = Observer()
 
 
 if __name__ == "__main__":

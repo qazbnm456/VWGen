@@ -6,7 +6,6 @@ import re
 import sys
 import optparse
 import web
-import time
 from blessed import Terminal
 from docker.errors import APIError
 from core.file.dockerAgent import dockerAgent
@@ -173,6 +172,11 @@ class VWGen(object):
                         if not found:
                             Logger.logError(
                                 "[ERROR] Unable to find a module named {0}".format(module))
+
+    def reset(self):
+        self.attacks = []
+        self.source = None
+        self.craft = None
 
     def setColor(self, default=1):
         self.color = default
@@ -350,12 +354,31 @@ class VWGen(object):
                         Logger.logSuccess("[*] show [modules, themes, infos]")
                 return True
             elif arg.startswith("start"):
-                self.start()
+                gen.setThemeEnv()
+
+                web.fp.observer.start()
+                try:
+                    self.start()
+                except (KeyboardInterrupt, SystemExit, RuntimeError):
+                    Logger.logInfo("[INFO] See you next time.")
+                except APIError as e:
+                    Logger.logError("\n" + "[ERROR] " + str(e.explanation))
+                    Logger.logInfo(
+                        "\n[INFO] Taking you to safely leave the program.")
+                finally:
+                    web.fp.observer.stop()
+                    web.fp.observer.join()
+                    web.fp.rmtree(web.fp.path)
+                    web.dAgent.removeContainer(web.db_ctr)
+                    web.dAgent.removeContainer(web.ctr)
+
+                    gen.reset()
+                    web.fp.cleanObserver()
                 return True
             elif arg.startswith("CTRL+D"):
                 return "CTRL+D"
-        except AttributeError:
-            Logger.logError("Undefined attribute!")
+        except AttributeError as e:
+            Logger.logError(e)
             return True
 
     def bindsOperation(self):
