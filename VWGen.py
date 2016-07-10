@@ -12,6 +12,7 @@ from docker.errors import APIError
 from core.file.dockerAgent import dockerAgent
 from core.file.filePointer import filePointer
 from core.file.logger import Logger
+from core.shell.shellAgent import shellAgent
 
 try:
     import urlparse
@@ -53,16 +54,19 @@ class switch(object):
 
 
 def enter_shell(gen_instance):
+    sA = shellAgent()
     gen_instance.parse("set backend = php")
     gen_instance.parse("set dbms    = None")
     gen_instance.parse("set theme   = startbootstrap-agency-1.0.6")
     gen_instance.parse("set expose  = 80")
     gen_instance.parse("set modules = +unfilter")
-    Logger.logInfo("VWGen ready (press Ctrl+C to end input)")
+    Logger.logInfo("VWGen ready (press Ctrl+D to end input)")
     while True:
-        print ">",
-        result = gen_instance.parse(sys.stdin.readline())
-        if result is not None:
+        result = gen_instance.parse(sA.prompt())
+        if result == "CTRL+D":
+            Logger.logInfo("[INFO] CTRL+D captured. Exit.")
+            raise RuntimeError
+        elif result is not None:
             Logger.logSuccess(result)
         else:
             Logger.logError("Unreconized keyword!")
@@ -348,6 +352,8 @@ class VWGen(object):
             elif arg.startswith("start"):
                 self.start()
                 return True
+            elif arg.startswith("CTRL+D"):
+                return "CTRL+D"
         except AttributeError:
             Logger.logError("Undefined attribute!")
             return True
