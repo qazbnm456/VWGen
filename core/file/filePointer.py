@@ -17,6 +17,11 @@ class ModifiedHandler(FileSystemEventHandler):
 class filePointer(object):
     """Class for manipulating files."""
 
+    customizationPath = os.path.join(os.path.abspath(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), os.pardir)), "customization")
+    tmpFile = None
+    customizationClass = None
+
     pointer = None
     target = None
     path = None
@@ -170,6 +175,15 @@ class filePointer(object):
     def cleanObserver(self):
         self.observer.unschedule_all()
         self.observer = Observer()
+
+    def processInputFile(self, inputFile=None):
+        if inputFile is not None:
+            self.tmpFile = os.path.join(self.customizationPath, "instanceSample.py")
+            self.copy(inputFile, self.tmpFile)
+
+    def finishProcessInputFile(self):
+        self.tmpFile = None
+        self.customizationClass = None
 
 
 if __name__ == "__main__":

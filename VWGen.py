@@ -23,7 +23,6 @@ except ImportError:  # For Python 3
 web.container_name = None
 web.ctr = None
 web.db_ctr = None
-web.source = None
 web.payloads = None
 web.path = None
 web.dAgent = dockerAgent()
@@ -482,7 +481,7 @@ if __name__ == "__main__":
                          action="store", dest="craft", type="string", default=None, metavar='CRAFTING',
                          help="craft the loopholes on your own")
         group.add_option('--file',
-                         action="store", dest="source", type="string", default=None, metavar='FILENAME',
+                         action="store", dest="inputFile", type="string", default=None, metavar='FILENAME',
                          help="specify the file that VWGen will gonna operate on")
         p.add_option_group(group)
         options, arguments = p.parse_args()
@@ -494,11 +493,31 @@ if __name__ == "__main__":
         else:
             # set sys.argv to the remaining arguments after
             # everything consumed by optparse
-            if options.source is not None:
-                web.source = options.source
+            if options.inputFile is not None:
+                web.fp.processInputFile(options.inputFile)
+                from core.customization.instanceSample import instanceSample
+                instance = instanceSample(gen)
+                web.fp.customizationClass = instanceSample
+                instance.gen_instance.setThemeEnv()
 
-                # This is still not implemeted now
-                pass
+                web.fp.observer.start()
+                try:
+                    instance.gen_instance.start()
+                except (KeyboardInterrupt, SystemExit, RuntimeError):
+                    Logger.logInfo("[INFO] See you next time.")
+                except APIError as e:
+                    Logger.logError("\n" + "[ERROR] " + str(e.explanation))
+                    Logger.logInfo(
+                        "\n[INFO] Taking you to safely leave the program.")
+                finally:
+                    web.fp.observer.stop()
+                    web.fp.observer.join()
+                    web.fp.rmtree(web.fp.path)
+                    web.dAgent.removeContainer(web.db_ctr)
+                    web.dAgent.removeContainer(web.ctr)
+
+                    web.fp.finishProcessInputFile()
+                    raise SystemExit
 
             if options.color:
                 gen.setColor()

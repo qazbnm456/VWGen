@@ -1,6 +1,7 @@
 import os
 import sys
 from abc import ABCMeta, abstractmethod
+from six import with_metaclass
 
 modules = ["mod_unfilter", "mod_expand", "mod_sqli",
            "mod_nosqli", "mod_lfi", "mod_crlf", "mod_exec", "mod_xss"]
@@ -30,13 +31,11 @@ class switch(object):
             return False
 
 
-class Attack(object):
+class Attack(with_metaclass(ABCMeta, object)):
     """
     This class represents an attack, it must be extended
     for any class which implements a new type of attack
     """
-
-    __metaclass__ = ABCMeta
 
     name = "attack"
 
@@ -162,7 +161,11 @@ class Attack(object):
 
     def Job(self, source, backend, dbms):
         if self.doReturn == True:
-            if self.craft is not None:
+            if self.fp.tmpFile is not None:
+                self.generateHandler = type(self.__class__.generateHandler)(
+                    self.fp.customizationClass.generateHandler, self, self.__class__)
+                self.logG("[+] Your inputFile has been loaded!")
+            elif self.craft is not None:
                 exec \
                     """def foo(self, tree_node, o, elem):
                             %s
