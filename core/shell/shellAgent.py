@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import socket
+
 from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.history import InMemoryHistory
 from pygments.token import Token
@@ -7,12 +9,18 @@ from pygments.token import Token
 from .shellCompleter import shellCompleter
 from .shellSuggester import shellSuggester
 
+def getPromptTokens(cli):
+    
+    username = socket.gethostname()
+    username = username[0:username.find(".")]
 
-def get_prompt_tokens(cli):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("gmail.com",80))
+
     return [
-        (Token.Username, 'root'),
+        (Token.Username, username),
         (Token.At,       '@'),
-        (Token.Host,     'localhost'),
+        (Token.Host,     s.getsockname()[0]),
         (Token.Pound,    '# '),
     ]
 
@@ -23,6 +31,6 @@ class shellAgent(object):
 
     def prompt(self):
         try:
-            return prompt(get_prompt_tokens=get_prompt_tokens, history=self.history, auto_suggest=shellSuggester(), completer=shellCompleter())
+            return prompt(get_prompt_tokens=getPromptTokens, history=self.history, auto_suggest=shellSuggester(), completer=shellCompleter())
         except EOFError:
             return "CTRL+D"

@@ -9,7 +9,8 @@ from prompt_toolkit.auto_suggest import AutoSuggest, Suggestion
 from .shellSuggestion import SET_SUGGESTIONS
 
 RULES = [
-    (r'set\s+(backend|dbms|modules|theme|color|verbose|expose)\s*[^=]+$', 'set_suggestions')
+    (r'^unset\s+.+', 'finish_suggestions'),
+    (r'^set\s+(backend|dbms|modules|theme|color|verbose|expose)\s*[^=]+$', 'set_suggestions')
 ]
 
 
@@ -24,6 +25,9 @@ RULES = compile_rules(RULES)
 
 
 class SuggestionGenerator(object):
+    
+    def finish_suggestions(self, match):
+        return ""
 
     def set_suggestions(self, match):
         return SET_SUGGESTIONS

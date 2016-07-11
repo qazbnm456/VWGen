@@ -15,16 +15,21 @@ from prompt_toolkit.completion import Completer, Completion
 from .shellCompletion import ROOT_COMMANDS, VARIABLES, PRESET_OPTIONS, BOOLEANS, RECOMMEND_PORTS, BACKENDS, DATABASES, MODULES, THEMES
 
 RULES = [
-    (r'set\s+(color|verbose)\s*[=]{1}', 'set_boolean_command'),
-    (r'set\s+expose\s*[=]{1}', 'set_port_command'),
-    (r'set\s+backend\s*[=]{1}', 'set_backend_command'),
-    (r'set\s+dbms\s*[=]{1}', 'set_dbms_command'),
-    (r'set\s+modules\s*[=]{1}', 'set_module_command'),
-    (r'set\s+theme\s*[=]{1}', 'set_theme_command'),
-    (r'help', 'help_command'),
-    (r'set', 'set_command'),
-    (r'unset', 'unset_command'),
-    (r'show', 'show_command'),
+    (r'^set\s+.+\s*=\s*[+a-zA-Z\.\-0-9]+', 'finish_command'),
+    (r'^unset\s+.+', 'finish_command'),
+    (r'^help\s+.+', 'finish_command'),
+    (r'^show\s+.+', 'finish_command'),
+    (r'^start', 'finish_command'),
+    (r'^set\s+(color|verbose)\s*[=]{1}', 'set_boolean_command'),
+    (r'^set\s+expose\s*[=]{1}', 'set_port_command'),
+    (r'^set\s+backend\s*[=]{1}', 'set_backend_command'),
+    (r'^set\s+dbms\s*[=]{1}', 'set_dbms_command'),
+    (r'^set\s+modules\s*[=]{1}', 'set_module_command'),
+    (r'^set\s+theme\s*[=]{1}', 'set_theme_command'),
+    (r'^help', 'help_command'),
+    (r'^set', 'set_command'),
+    (r'^unset', 'unset_command'),
+    (r'^show', 'show_command'),
     (r'', 'root_commands')
 ]
 
@@ -63,6 +68,9 @@ def match_completions(cur_word, word_dict):
 
 
 class CompletionGenerator(object):
+    
+    def finish_command(self, match):
+        yield "", "" 
 
     def root_commands(self, match):
         return self._generic_generate(ROOT_COMMANDS.keys(), {}, ROOT_COMMANDS)
