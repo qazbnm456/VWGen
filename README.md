@@ -28,7 +28,7 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
    - *unfilter* module scrap the sites and find the keywords to be replaced by parameters.
    - *expand* module learn the sites and try to rearrange the elements to let child modules insert there payloads within it.
 3. Only two themes right now.
-    <div align="center"><img src="http://i.imgur.com/goiRccC.png" /></div>
+    <div align="center"><img src="http://i.imgur.com/jgdO4HD.png" /></div>
 4. Python3 is currently not supported!
 
 <a name="install"></a>
@@ -36,7 +36,12 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 ## Install
 
 1. Install docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
-2. Install docker-py: `pip install docker-py`, blessed: `pip install blessed`, and BeautifulSoup 4: `pip install beautifulsoup4`.
+2. Install:
+    - docker-py: `pip install docker-py`
+    - blessed: `pip install blessed`
+    - BeautifulSoup 4: `pip install beautifulsoup4`
+    - watchdog: `pip install watchdog`
+    - python-prompt-toolkit: `pip install prompt-toolkit`
 3. Install lxml. `sudo apt-get install python-lxml`
 4. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
 
@@ -47,24 +52,23 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
     Usage: VWGen.py [options]
 
     Options:
-      --version             show program's version number and exit
-      -h, --help            show this help message and exit
-      -c, --console         enter console mode
-      --backend=BACKEND     configure the backend (Default: php)
-      --theme=THEME         configure the theme (Default: startbootstrap-
+    --version             show program's version number and exit
+    -h, --help            show this help message and exit
+    -c, --console         enter console mode
+    --backend=BACKEND     configure the backend (Default: php)
+    --theme=THEME         configure the theme (Default: startbootstrap-
                             agency-1.0.6)
-      --expose=EXPOSE_PORT  configure the port of the host for container binding
+    --expose=EXPOSE_PORT  configure the port of the host for container binding
                             (Default: 80)
-      --database=DBMS, --db=DBMS
+    --database=DBMS, --db=DBMS
                             configure the dbms for container linking
-      --modules=LIST        list of modules to load (Default: +unfilter)
-      --color               set terminal color
-      -v, --verbose         set verbosity level
+    --modules=LIST        list of modules to load (Default: +unfilter)
+    --color               set terminal color
+    -v, --verbose         set verbosity level
 
-      Under development:
+    Under development:
         Following options are still in development!
 
-        --craft=CRAFTING    craft the loopholes on your own
         --file=FILENAME     specify the file that VWGen will gonna operate on
 
 <a name="brief"></a>
@@ -74,10 +78,10 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 Which types of vulnerabilities will be generated would depend on the modules you set while you start VWGen, and following are some pictures of VWGen:
 
 - `./VWGen.py --help` - Show help message.
-<div align="center"><img src="http://i.imgur.com/pewfjhK.png" /></div>
+<div align="center"><img src="http://i.imgur.com/T7g6q53.png" /></div>
 
 - `./VWGen.py -c` - Enter console mode.
-<div align="center"><img src="http://i.imgur.com/Px0DNGD.png" /></div>
+<div align="center"><img src="http://i.imgur.com/fOZWju1.png" /></div>
 
 - `./VWGen.py` - Start VWGen with some default arguments.
 <div align="center"><img src="http://i.imgur.com/55RPixv.png" /></div>

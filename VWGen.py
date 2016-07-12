@@ -95,7 +95,6 @@ class VWGen(object):
         self.attacks = []
         self.modules = None
         self.source = None
-        self.craft = None
 
     def __initBackend(self):
         # Do Backend Environment Initialization
@@ -175,7 +174,6 @@ class VWGen(object):
     def reset(self):
         self.attacks = []
         self.source = None
-        self.craft = None
 
     def setColor(self, default=1):
         self.color = default
@@ -184,10 +182,6 @@ class VWGen(object):
     def setVerbose(self, default=1):
         self.verbose = default
         return self.verbose
-
-    def setCraft(self, craft=None):
-        self.craft = craft
-        return self.craft
 
     def generate(self):
         self.__initAttacks()
@@ -211,8 +205,6 @@ class VWGen(object):
                     x.setColor()
                 if self.verbose:
                     x.setVerbose()
-                if self.craft is not None:
-                    x.setCraft(self.craft)
                 web.payloads = x.Job(
                     self.source, self.backend, self.dbms)
 
@@ -294,7 +286,6 @@ class VWGen(object):
         Logger.logInfo("[INFO] Expose Port: {0}".format(self.expose))
         Logger.logInfo("[INFO] Color: {0}".format(str(bool(self.color))))
         Logger.logInfo("[INFO] Verbose: {0}".format(str(bool(self.verbose))))
-        Logger.logInfo("[INFO] Craft: {0}".format(self.craft))
         Logger.logInfo("[INFO] Modules: {0}".format(self.modules))
 
     def parse(self, arg):
@@ -346,7 +337,6 @@ class VWGen(object):
                             "Color: {0}".format(str(bool(self.color))))
                         Logger.logSuccess("Verbose: {0}".format(
                             str(bool(self.verbose))))
-                        Logger.logSuccess("Craft: {0}".format(self.craft))
                         Logger.logSuccess("Modules: {0}".format(self.modules))
                         break
                     if case():
@@ -477,9 +467,6 @@ if __name__ == "__main__":
                      help="set verbosity level")
         group = optparse.OptionGroup(
             p, 'Under development', 'Following options are still in development!')
-        group.add_option('--craft',
-                         action="store", dest="craft", type="string", default=None, metavar='CRAFTING',
-                         help="craft the loopholes on your own")
         group.add_option('--file',
                          action="store", dest="inputFile", type="string", default=None, metavar='FILENAME',
                          help="specify the file that VWGen will gonna operate on")
@@ -530,7 +517,6 @@ if __name__ == "__main__":
             gen.setTheme(options.theme)
             gen.setExpose(options.expose)
             gen.setModules(options.modules)
-            gen.setCraft(options.craft)
             gen.setThemeEnv()
 
             web.fp.observer.start()

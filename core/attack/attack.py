@@ -69,7 +69,6 @@ class Attack(with_metaclass(ABCMeta, object)):
     def __init__(self, fp=None):
         self.color = 0
         self.verbose = 0
-        self.craft = None
         self.settings = {}
 
         # List of modules (objects) that must be launched during the current module
@@ -84,9 +83,6 @@ class Attack(with_metaclass(ABCMeta, object)):
 
     def setVerbose(self):
         self.verbose = 1
-
-    def setCraft(self, craft=None):
-        self.craft = craft
 
     @abstractmethod
     def generateHandler(self, tree_node=None, o=None, elem=None):
@@ -165,14 +161,6 @@ class Attack(with_metaclass(ABCMeta, object)):
                 self.generateHandler = type(self.__class__.generateHandler)(
                     self.fp.customizationClass.generateHandler, self, self.__class__)
                 self.logG("[+] Your inputFile has been loaded!")
-            elif self.craft is not None:
-                exec \
-                    """def foo(self, tree_node, o, elem):
-                            %s
-                    """ % (self.craft)
-                self.generateHandler = type(self.__class__.generateHandler)(
-                    foo, self, self.__class__)
-                self.logG("[+] Your crafting has been loaded!")
             self.settings = self.doJob(source, backend, dbms, parent=None)
             self.final()
             return self.settings
