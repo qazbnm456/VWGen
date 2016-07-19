@@ -10,19 +10,26 @@ from .shellCompleter import shellCompleter
 from .shellSuggester import shellSuggester
 
 def getPromptTokens(cli):
-    
-    username = socket.gethostname()
-    username = username[0:username.find(".")]
+    try:
+        username = socket.gethostname()
+        username = username[0:username.find(".")]
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("gmail.com",80))
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("gmail.com",80))
 
-    return [
-        (Token.Username, username),
-        (Token.At,       '@'),
-        (Token.Host,     s.getsockname()[0]),
-        (Token.Pound,    '# '),
-    ]
+        return [
+            (Token.Username, username),
+            (Token.At,       '@'),
+            (Token.Host,     s.getsockname()[0]),
+            (Token.Pound,    '# '),
+        ]
+    except socket.gaierror:
+        return [
+            (Token.Username, 'root'),
+            (Token.At,       '@'),
+            (Token.Host,     'localhost'),
+            (Token.Pound,    '# '),
+        ] 
 
 
 class shellAgent(object):

@@ -478,12 +478,11 @@ if __name__ == "__main__":
         if options.console:
             enter_shell(gen)
         else:
-            # set sys.argv to the remaining arguments after
-            # everything consumed by optparse
             if options.inputFile is not None:
                 web.fp.processInputFile(options.inputFile)
                 from core.customization.instanceSample import instanceSample
                 instance = instanceSample(gen)
+                instance.main()
                 web.fp.customizationClass = instanceSample
                 instance.gen_instance.setThemeEnv()
 

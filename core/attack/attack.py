@@ -78,6 +78,9 @@ class Attack(with_metaclass(ABCMeta, object)):
         if fp is not None:
             self.fp = fp
 
+    def __call__(self):
+        pass
+
     def setColor(self):
         self.color = 1
 
@@ -160,7 +163,10 @@ class Attack(with_metaclass(ABCMeta, object)):
             if self.fp.tmpFile is not None:
                 self.generateHandler = type(self.__class__.generateHandler)(
                     self.fp.customizationClass.generateHandler, self, self.__class__)
+                self.__call__ = type(self.__class__.__call__)(
+                    self.fp.customizationClass.__call__, self, self.__class__)
                 self.logG("[+] Your inputFile has been loaded!")
+                self.__call__()
             self.settings = self.doJob(source, backend, dbms, parent=None)
             self.final()
             return self.settings

@@ -178,7 +178,8 @@ class filePointer(object):
 
     def processInputFile(self, inputFile=None):
         if inputFile is not None:
-            self.tmpFile = os.path.join(self.customizationPath, "instanceSample.py")
+            self.tmpFile = os.path.join(
+                self.customizationPath, "instanceSample.py")
             self.copy(inputFile, self.tmpFile)
 
     def finishProcessInputFile(self):

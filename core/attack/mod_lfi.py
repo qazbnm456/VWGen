@@ -63,28 +63,28 @@ class mod_lfi(Attack):
             o[int(elem['lineno']) - 1] = re.sub(r'(.*)#+<{0}>(.*)</{0}>(.*)'.format(elem['identifier']), lambda m: "{0}{1}{2}".format(m.group(
                 1), self.payloads['payloads'][self.index]['vector'].replace('{0}', m.group(2)), m.group(3)), o[int(elem['lineno']) - 1], flags=re.IGNORECASE)
 
+        if self.settings['key'] is not None:
+            for index, _ in enumerate(self.settings['key']):
+                if self.payloads['payloads'][self.index]['restrict']['include_value']:
+                    for restrict in self.payloads['payloads'][self.index]['restrict']['include_value']:
+                        if restrict.startswith("-"):
+                            restrict = restrict[1:]
+                            self.settings['value'][index] = self.settings['lficonfig'][
+                                :self.settings['lficonfig'].index(restrict)]
+                        else:
+                            restrict = restrict[1:]
+                            self.settings['value'][index] = "".join(
+                                self.settings['lficonfig'], restrict)
+                else:
+                    self.settings['value'][
+                        index] = self.settings['lficonfig']
+
     def doJob(self, http_res, backend, dbms, parent=None):
         """This method do a Job."""
         try:
             self.settings['lficonfig'] = self.findRequireFiles(backend, dbms)
             self.settings = self.generate_payloads(
                 self.settings['html'], parent=parent)
-
-            if self.settings['key'] is not None:
-                for index, _ in enumerate(self.settings['key']):
-                    if self.payloads['payloads'][self.index]['restrict']['include_value']:
-                        for restrict in self.payloads['payloads'][self.index]['restrict']['include_value']:
-                            if restrict.startswith("-"):
-                                restrict = restrict[1:]
-                                self.settings['value'][index] = self.settings['lficonfig'][
-                                    :self.settings['lficonfig'].index(restrict)]
-                            else:
-                                restrict = restrict[1:]
-                                self.settings['value'][index] = "".join(
-                                    self.settings['lficonfig'], restrict)
-                    else:
-                        self.settings['value'][
-                            index] = self.settings['lficonfig']
 
         except:
             self.logR("ERROR!! You might forget to set Backend variable.")

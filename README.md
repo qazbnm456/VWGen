@@ -38,6 +38,7 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 1. Install docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
 2. Install:
     - docker-py: `pip install docker-py`
+    - pycurl: `pip install pycurl`
     - blessed: `pip install blessed`
     - BeautifulSoup 4: `pip install beautifulsoup4`
     - watchdog: `pip install watchdog`
