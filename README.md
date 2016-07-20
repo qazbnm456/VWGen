@@ -7,20 +7,26 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 
 ---------------------------------------
 
-##**Table of contents**
+**Table of contents**
 
-####*[Status quo](#status)*
-####*[Install](#install)*
-####*[Instruction](#instruction)*
-####*[In Brief](#brief)*
-####*[Know issues](#issue)*
-####*[Contributing](#contribute)*
-####*[LICENSE](#license)*
+ * [Releases](#releases)
+ * [Status quo](#status)
+ * [Feature](#feature)
+ * [Install](#install)
+ * [Instruction](#instruction)
+ * [In Brief](#brief)
+ * [Know issues](#issue)
+ * [Contributing](#contribute)
+ * [LICENSE](#license)
 
 ---------------------------------------
 
-<a name="status"></a>
+<a name="releases"></a>
+## Releases
 
+- v0.1 -- Initial release
+
+<a name="status"></a>
 ## Status quo
 
 1. Supporting very limited modules, such as [SQLI](https://www.owasp.org/index.php/SQL_Injection), [NOSQLI](https://www.owasp.org/index.php/Testing_for_NoSQL_injection), [LFI](https://www.owasp.org/index.php/Testing_for_Local_File_Inclusion), [CRLF](https://www.owasp.org/index.php/CRLF_Injection), [Command Injection](https://www.owasp.org/index.php/Command_Injection) and [XSS](https://www.owasp.org/index.php/Cross-site_Scripting_(XSS)).
@@ -30,9 +36,18 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 3. Only two themes right now.
     <div align="center"><img src="http://i.imgur.com/jgdO4HD.png" /></div>
 4. Python3 is currently not supported!
+5. `--file` option works, but it still needs some developing. Example command: `./VWGen.py --file="$VWGen_HOME/examples/2016_ais3_web3/sample.py"`
+
+<a name="feature"></a>
+## Feature
+
+`--file` option makes share web challenges easily. All you need to do is provide a custom script, which defines how vulnerabilities would be made or be triggered, and each one can just load that script to spawn the same vulnerable web applications immediately.
+
+There is a `samples/` directory in the root folder, and I will put some sample scripts in it. Now, we have:
+
+- [2016_ais3_web3](https://github.com/qazbnm456/VWGen/blob/master/examples/2016_ais3_web3/sample.py)
 
 <a name="install"></a>
-
 ## Install
 
 1. Install docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
@@ -47,7 +62,6 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 4. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
 
 <a name="instruction"></a>
-
 ## Instruction
 
     Usage: VWGen.py [options]
@@ -73,13 +87,9 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
         --file=FILENAME     specify the file that VWGen will gonna operate on
 
 <a name="brief"></a>
-
 ## In Brief
 
-Which types of vulnerabilities will be generated would depend on the modules you set while you start VWGen, and following are some pictures of VWGen:
-
-- `./VWGen.py --help` - Show help message.
-<div align="center"><img src="http://i.imgur.com/T7g6q53.png" /></div>
+Which types of vulnerabilities will be generated would depend on the modules you set while you start VWGen, and following are some screenshots of VWGen:
 
 - `./VWGen.py -c` - Enter console mode.
 <div align="center"><img src="http://i.imgur.com/fOZWju1.png" /></div>
@@ -93,14 +103,12 @@ Which types of vulnerabilities will be generated would depend on the modules you
 - `./VWGen.py --module="+exec"` - Start VWGen with command injection vulnerability.
 <div align="center"><img src="http://i.imgur.com/Rt0er9E.png" /></div>
 
-<a name="contribute"></a>
-
 <a name="issue"></a>
-
 ## Known issues
 
 1. [mod_expand.py](https://github.com/qazbnm456/VWGen/blob/master/core/attack/mod_expand.py) can produce defferent extensions, but it still needs user's interaction to modify source code (Warning message is provided).
 
+<a name="contribute"></a>
 ## Contributing to VWGen
 
 | Linux | Windows | MacOSX |
@@ -110,7 +118,6 @@ Which types of vulnerabilities will be generated would depend on the modules you
 Wanna enrich the possibilities that VWGen can inspire? Send pull requests or issues immediately!
 
 <a name="license"></a>
-
 ## LICENSE
 
 This project use [Apache License, Version 2.0](https://github.com/qazbnm456/VWGen/blob/master/LICENSE).
