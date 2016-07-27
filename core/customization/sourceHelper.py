@@ -1,5 +1,6 @@
 import pycurl
 import StringIO
+from ..file.logger import Logger
 
 
 class sourceHelper(object):
@@ -16,7 +17,13 @@ class sourceHelper(object):
         self.c.setopt(pycurl.URL, url)
 
     def perform(self):
-        self.c.perform()
+        try:
+            self.c.perform()
+        except pycurl.error as e:
+            Logger.logError("\n" + "[ERROR] " + e[1])
+            Logger.logInfo(
+                "\n[INFO] Taking you to safely leave the program.")
+            raise RuntimeError
         r = self.b.getvalue()
         self.b.close()
         return r

@@ -95,6 +95,7 @@ class VWGen(object):
         self.attacks = []
         self.modules = None
         self.source = None
+        self.fp = web.fp
 
     def __initBackend(self):
         # Do Backend Environment Initialization
@@ -102,9 +103,9 @@ class VWGen(object):
 
     def __initThemeEnv(self):
         self.__initBackend()
-        web.fp.zipExtract(self.theme_path, self.output)
-        self.source = web.fp.read(os.path.join(
-            self.output, self.theme, web.fp.findMainPointer()))
+        self.fp.zipExtract(self.theme_path, self.output)
+        self.source = self.fp.read(os.path.join(
+            self.output, self.theme, self.fp.findMainPointer()))
 
     def __initAttacks(self):
         from core.attack import attack
@@ -116,7 +117,7 @@ class VWGen(object):
         for mod_name in attack.modules:
             mod = __import__("core.attack." + mod_name,
                              fromlist=attack.modules)
-            mod_instance = getattr(mod, mod_name)(web.fp)
+            mod_instance = getattr(mod, mod_name)(self.fp)
 
             self.attacks.append(mod_instance)
             self.attacks.sort(lambda a, b: a.PRIORITY - b.PRIORITY)
@@ -345,7 +346,7 @@ class VWGen(object):
             elif arg.startswith("start"):
                 gen.setThemeEnv()
 
-                web.fp.observer.start()
+                self.fp.observer.start()
                 try:
                     self.start()
                 except (KeyboardInterrupt, SystemExit, RuntimeError):
@@ -355,14 +356,14 @@ class VWGen(object):
                     Logger.logInfo(
                         "\n[INFO] Taking you to safely leave the program.")
                 finally:
-                    web.fp.observer.stop()
-                    web.fp.observer.join()
-                    web.fp.rmtree(web.fp.path)
+                    self.fp.observer.stop()
+                    self.fp.observer.join()
+                    self.fp.rmtree(self.fp.path)
                     web.dAgent.removeContainer(web.db_ctr)
                     web.dAgent.removeContainer(web.ctr)
 
                     gen.reset()
-                    web.fp.cleanObserver()
+                    self.fp.cleanObserver()
                 return True
             elif arg.startswith("CTRL+D"):
                 return "CTRL+D"
@@ -533,5 +534,8 @@ if __name__ == "__main__":
                 web.fp.rmtree(web.fp.path)
                 web.dAgent.removeContainer(web.db_ctr)
                 web.dAgent.removeContainer(web.ctr)
-    except (KeyboardInterrupt, RuntimeError):
+    except (KeyboardInterrupt, SystemExit):
         pass
+    except RuntimeError:
+        web.dAgent.removeContainer(web.db_ctr)
+        web.dAgent.removeContainer(web.ctr)
