@@ -81,11 +81,11 @@ class dockerAgent(object):
         """Create host config for containers"""
         return self.client.create_host_config(port_bindings=port_bindings, binds=binds, links=links)
 
-    def startContainer(self, image, name, ports=None, volumes=None, environment=None, host_config=None):
+    def startContainer(self, image, name, ports=None, volumes=None, environment=None, host_config=None, tty=False, command=None):
         """Start containers"""
         try:
             self.ctr = self.client.create_container(
-                image=image, name=name, ports=ports, volumes=volumes, environment=environment, host_config=host_config)
+                image=image, name=name, ports=ports, volumes=volumes, environment=environment, host_config=host_config, tty=tty, command=command)
         except (TypeError, APIError), e:
             Logger.logError("\n" + "[ERROR] " + str(e.explanation))
             for line in self.client.pull(image, stream=True):
@@ -93,7 +93,7 @@ class dockerAgent(object):
                     Logger.logInfo(
                         "[INFO] " + json.dumps(iterElement, indent=4))
             self.ctr = self.client.create_container(
-                image=image, name=name, ports=ports, volumes=volumes, environment=environment, host_config=host_config)
+                image=image, name=name, ports=ports, volumes=volumes, environment=environment, host_config=host_config, tty=tty, command=command)
         except NullResource:
             pass
         self.current_ctr = self.ctr

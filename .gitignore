@@ -4,6 +4,7 @@
 # Ignore other unneeded files.
 .vscode/
 demo/output
+core/customization/instanceSample.py*
 *.pyc
 *.swp
 *~

@@ -42,7 +42,8 @@ RECOMMEND_PORTS = OrderedDict([
 
 BACKENDS = OrderedDict([
     ('php', 'PHP Script Language'),
-    ('php7', 'PHP Script Language')
+    ('php7', 'PHP Script Language'),
+    ('node', 'Node.js is a JavaScript-based platform for server-side and networking applications.')
 ])
 
 DATABASES = OrderedDict([

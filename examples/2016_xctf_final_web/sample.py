@@ -19,7 +19,7 @@ class instanceSample(refObject):
     # Because main(self) is an entry function, every initialization should be
     # setup here.
     def main(self):
-        # Use mod_lfi as base module.
+        # Use mod_unfilter as base module.
         self.gen_instance.parse("set modules = +unfilter")
         # Use MySQL as DBMS
         self.gen_instance.parse("set dbms = MySQL")

@@ -97,6 +97,9 @@ class VWGen(object):
         self.source = None
         self.fp = web.fp
 
+        self.tty = False
+        self.command = None
+
     def __initBackend(self):
         # Do Backend Environment Initialization
         pass
@@ -226,6 +229,12 @@ class VWGen(object):
             if case('php7'):
                 self.image = 'richarvey/nginx-php-fpm:php7'
                 self.mount_point = '/var/www/html'
+                return self.backend
+            if case('node'):
+                self.tty = True
+                self.command = "/bin/bash -c 'while true; do sleep 1; done'"
+                self.image = 'node:latest'
+                self.mount_point = '/usr/src/app'
                 return self.backend
             if case():
                 Logger.logError("[ERROR] Not supported backend!")
@@ -400,7 +409,7 @@ class VWGen(object):
                 binds=self.bindsOperation(),
                 links={'{0}'.format(web.container_name): '{0}'.format(
                     self.dbms.lower())} if self.dbms is not None else None
-            ), name='VW')
+            ), name='VW', tty=self.tty, command=self.command)
 
             if "cmd" in web.payloads:
                 Logger.logInfo(
