@@ -28,7 +28,7 @@ class filePointer(object):
     root = None
     layers = None
 
-    def __init__(self, path=None, pointer="index.html", target="index.php"):
+    def __init__(self, path=None, pointer=None, target="index.php"):
         self.event_handler = ModifiedHandler(self)
         self.observer = Observer()
         if path is not None:
@@ -163,14 +163,17 @@ class filePointer(object):
         return self.target
 
     def findMainPointer(self):
-        if self.root is not None:
-            for ele in self.layers[self.root].values():
-                if not isinstance(ele, dict):
-                    if self.layers[self.root].keys()[self.layers[self.root].values().index(ele)] in ["index.htm", "index.html", "index.php", "main.html", "main.html", "main.php"]:
-                        return self.changePointer(pointer=self.layers[self.root].keys()[self.layers[self.root].values().index(ele)])
-            return self.changePointer()
+        if self.pointer is None:
+            if self.root is not None:
+                for ele in self.layers[self.root].values():
+                    if not isinstance(ele, dict):
+                        if self.layers[self.root].keys()[self.layers[self.root].values().index(ele)] in ["index.htm", "index.html", "index.php", "main.html", "main.html", "main.php"]:
+                            return self.changePointer(pointer=self.layers[self.root].keys()[self.layers[self.root].values().index(ele)])
+                return self.changePointer()
+            else:
+                raise RuntimeError
         else:
-            raise RuntimeError
+            return self.pointer
 
     def cleanObserver(self):
         self.observer.unschedule_all()

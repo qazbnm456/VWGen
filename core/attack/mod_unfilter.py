@@ -154,7 +154,6 @@ class mod_unfilter(Attack):
 
         self.settings = {"key": [], "value": [], "html": "",
                          "extra": {}, "warning": [], "error": []}
-
         for elem in e:
             # <a href="inject_point"></a>
             if elem['type'] == "attrval":
