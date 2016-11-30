@@ -43,23 +43,29 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 
 `--file` option makes share web challenges easily. All you need to do is provide a custom script, which defines how vulnerabilities would be made or be triggered, and each one can just load that script to spawn the same vulnerable web applications immediately.
 
-There is a `samples/` directory in the root folder, and I will put some sample scripts in it. Now, we have:
-
-- [2016_ais3_web3](https://github.com/qazbnm456/VWGen/blob/master/examples/2016_ais3_web3/sample.py)
+There is a [examples/](https://github.com/qazbnm456/VWGen/tree/master/examples) directory in the root folder, and I will put some sample scripts in it. Now, we have so many scripts!
 
 <a name="install"></a>
 ## Install
 
 1. Install docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
-2. Install:
+2. Pull fundamental images that we gonna use with VWGen:
+    - `docker pull richarvey/nginx-php-fpm:php5`
+    - `docker pull richarvey/nginx-php-fpm:php7`
+    - `docker pull mysql:5`
+    - `docker pull phpmyadmin/phpmyadmin:4.6.5.1-1`
+    - `docker pull node:7`
+3. Install:
+    - web.py: `pip install web.py`
     - docker-py: `pip install docker-py`
-    - pycurl: `pip install pycurl`
+    - pycurl: `pip install pycurl`, and if you have error like `Could not run curl-config: [Errno 2] No such file or directory`, solve the problem with `apt-get install libcurl4-openssl-dev`
     - blessed: `pip install blessed`
-    - BeautifulSoup 4: `pip install beautifulsoup4`
+    - BeautifulSoup 4: `pip install bs4`
     - watchdog: `pip install watchdog`
     - python-prompt-toolkit: `pip install prompt-toolkit`
-3. Install lxml. `sudo apt-get install python-lxml`
-4. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
+    - pygments: `pip install pygments`
+4. Install lxml: `apt-get install python-lxml`
+5. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
 
 <a name="instruction"></a>
 ## Instruction
@@ -113,7 +119,7 @@ Which types of vulnerabilities will be generated would depend on the modules you
 
 | Linux | Windows | MacOSX |
 |------------------|---------|---------|
-| ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.12.0-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.12.0-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.12.0-blue.svg) |
+| ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.12.3-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.12.3-blue.svg) | ![Compatibility Docker Version](https://img.shields.io/badge/docker%20version-1.12.3-blue.svg) |
 
 Wanna enrich the possibilities that VWGen can inspire? Send pull requests or issues immediately!
 
