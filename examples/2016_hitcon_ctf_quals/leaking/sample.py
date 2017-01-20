@@ -70,5 +70,10 @@ class instanceSample(refObject):
         """
         self.fp.write(os.path.join(self.fp.path, "package.json"),
                       package, ext=None)
+
+        # package.json
+        start = 'sed -i "s/3000/80/g" main.js && npm install -g yarn && yarn && node main.js'
+        self.fp.write(os.path.join(self.fp.path, "start.sh"),
+                      start, ext=None)
         self.settings[
-            'cmd'] = 'sed -i \'s/3000/80/g\' /usr/src/app/main.js && npm install -g yarn && yarn && node main.js'
+            'cmd'] = 'bash ./start.sh'

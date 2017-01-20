@@ -8,10 +8,10 @@ import optparse
 import web
 from blessed import Terminal
 from docker.errors import APIError
-from core.file.dockerAgent import dockerAgent
 from core.file.filePointer import filePointer
 from core.file.logger import Logger
 from core.shell.shellAgent import shellAgent
+from tsaotun.cli import Tsaotun
 
 try:
     import urlparse
@@ -25,7 +25,7 @@ web.ctr = None
 web.db_ctr = None
 web.payloads = None
 web.path = None
-web.dAgent = dockerAgent()
+web.dAgent = Tsaotun()
 web.fp = filePointer()
 
 
@@ -232,7 +232,6 @@ class VWGen(object):
                 return self.backend
             if case('node'):
                 self.tty = True
-                self.command = "/bin/bash -c 'while true; do sleep 1; done'"
                 self.image = 'node:latest'
                 self.mount_point = '/usr/src/app'
                 return self.backend
@@ -250,14 +249,12 @@ class VWGen(object):
         web.container_name = '{0}_ctr'.format(self.dbms)
         if self.dbms is not None:
             if self.dbms == 'MySQL':
-                web.db_ctr = web.dAgent.startContainer(image='mysql', name='{0}'.format(web.container_name),
-                                                       environment={
-                    "MYSQL_ROOT_PASSWORD": "root_password",
-                    "MYSQL_DATABASE": "root_mysql"
-                })
+                web.dAgent.send("run -d --name {0} -e MYSQL_ROOT_PASSWORD=root_password -e MYSQL_DATABASE=root_mysqls mysql".format(
+                    web.container_name))
             elif self.dbms == 'Mongo':
-                web.db_ctr = web.dAgent.startContainer(
-                    image='mongo', name='{0}'.format(web.container_name))
+                web.db_ctr = web.dAgent.send(
+                    "run -d --name {0} mongo".format(web.container_name))
+            web.db_ctr = web.dAgent.recv()
             return self.dbms
 
     def setTheme(self, theme="startbootstrap-agency-1.0.6"):
@@ -368,8 +365,8 @@ class VWGen(object):
                     self.fp.observer.stop()
                     self.fp.observer.join()
                     self.fp.rmtree(self.fp.path)
-                    web.dAgent.removeContainer(web.db_ctr)
-                    web.dAgent.removeContainer(web.ctr)
+                    web.dAgent.send("rm -f {0}".format(web.db_ctr))
+                    web.dAgent.send("rm -f {0}".format(web.ctr))
 
                     gen.reset()
                     self.fp.cleanObserver()
@@ -401,22 +398,29 @@ class VWGen(object):
         path = self.generate()
         web.path = path
         if web.payloads is not None:
-            web.ctr = web.dAgent.startContainer(image='{0}'.format(self.image), ports=[80], volumes=['{0}'.format(self.mount_point), '/etc/php5/fpm/php.ini'],
-                                                      host_config=web.dAgent.createHostConfig(
-                port_bindings={
-                    80: self.expose
-                },
-                binds=self.bindsOperation(),
-                links={'{0}'.format(web.container_name): '{0}'.format(
-                    self.dbms.lower())} if self.dbms is not None else None
-            ), name='VW', tty=self.tty, command=self.command)
+            if self.dbms:
+                if self.dbms == 'Mongo':
+                    cmd = "run -id -p {0}:80 -v {1}:{2}:rw -v {3}:/etc/php5/fpm/php.ini:ro -v {4}:/usr/lib/php5/modules/mongodb.so:ro --link {5}:{6} --name VW --workdir {2} {7} ".format(
+                        self.expose, web.path, self.mount_point, os.path.join(web.path, 'php.ini'), os.path.join(web.path, 'mongodb.so'), web.container_name, self.dbms.lower(), self.image)
+                else:
+                    cmd = "run -id -p {0}:80 -v {1}:{2} -v {3}:/etc/php5/fpm/php.ini --link {4}:{5} --name VW --workdir {2} {6} ".format(
+                        self.expose, web.path, self.mount_point, os.path.join(web.path, 'php.ini'), web.container_name, self.dbms.lower(), self.image)
+                if self.command:
+                    cmd = cmd + self.command
+                web.dAgent.send(cmd)
+            else:
+                cmd = "run -id -p {0}:80 -v {1}:{2}:rw -v {3}:/etc/php5/fpm/php.ini:ro --name VW --workdir {2} {4} ".format(
+                    self.expose, web.path, self.mount_point, os.path.join(web.path, 'php.ini'), self.image)
+                if self.command:
+                    cmd = cmd + self.command
+                web.dAgent.send(cmd)
+            web.ctr = web.dAgent.recv()
 
             if "cmd" in web.payloads:
                 Logger.logInfo(
-                    "[INFO] " + "CMD: cd {0} && {1}".format(self.mount_point, web.payloads['cmd']))
-                web.dAgent.execute(web.ctr, web.payloads[
-                                   'cmd'], self.mount_point)
-
+                    "[INFO] " + "CMD: {0}".format(web.payloads['cmd']))
+                web.dAgent.send(
+                    "exec {0} -- {1}".format(web.ctr, web.payloads['cmd']))
             if "warning" in web.payloads:
                 for warning in web.payloads['warning']:
                     Logger.logWarning("[WARNING] " + warning)
@@ -424,8 +428,8 @@ class VWGen(object):
                 for error in web.payloads['error']:
                     Logger.logError("[ERROR] " + error)
 
-            url = ['http', '{0}:{1}'.format(
-                web.dAgent.host, self.expose), '/', '', '', '']
+            url = ['http', '127.0.0.1:{0}'.format(
+                self.expose), '/', '', '', '']
             params = {}
 
             if web.payloads['key'] is not None:
@@ -444,7 +448,7 @@ class VWGen(object):
                 Logger.logSuccess(
                     t.center(t.blink("Browse: {0}".format(urlparse.urlunparse(url)))))
 
-            web.dAgent.logs(web.ctr)
+            web.dAgent.send("logs {0} -f".format(web.ctr))
 
 
 if __name__ == "__main__":
@@ -509,8 +513,8 @@ if __name__ == "__main__":
                     web.fp.observer.stop()
                     web.fp.observer.join()
                     web.fp.rmtree(web.fp.path)
-                    web.dAgent.removeContainer(web.db_ctr)
-                    web.dAgent.removeContainer(web.ctr)
+                    web.dAgent.send("rm -f {0}".format(web.db_ctr))
+                    web.dAgent.send("rm -f {0}".format(web.ctr))
 
                     web.fp.finishProcessInputFile()
                     raise SystemExit
@@ -541,10 +545,10 @@ if __name__ == "__main__":
                 web.fp.observer.stop()
                 web.fp.observer.join()
                 web.fp.rmtree(web.fp.path)
-                web.dAgent.removeContainer(web.db_ctr)
-                web.dAgent.removeContainer(web.ctr)
+                web.dAgent.send("rm -f {0}".format(web.db_ctr))
+                web.dAgent.send("rm -f {0}".format(web.ctr))
     except (KeyboardInterrupt, SystemExit):
         pass
     except RuntimeError:
-        web.dAgent.removeContainer(web.db_ctr)
-        web.dAgent.removeContainer(web.ctr)
+        web.dAgent.send("rm -f {0}".format(web.db_ctr))
+        web.dAgent.send("rm -f {0}".format(web.ctr))

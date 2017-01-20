@@ -56,15 +56,15 @@ There is a [examples/](https://github.com/qazbnm456/VWGen/tree/master/examples) 
     - `docker pull phpmyadmin/phpmyadmin:4.6.5.1-1`
     - `docker pull node:7`
 3. Install:
+    - tsaotun: `pip install tsaotun`
     - web.py: `pip install web.py`
-    - docker-py: `pip install docker-py`
     - pycurl: `pip install pycurl`, and if you have error like `Could not run curl-config: [Errno 2] No such file or directory`, solve the problem with `apt-get install libcurl4-openssl-dev`
     - blessed: `pip install blessed`
     - BeautifulSoup 4: `pip install bs4`
     - watchdog: `pip install watchdog`
     - python-prompt-toolkit: `pip install prompt-toolkit`
     - pygments: `pip install pygments`
-4. Install lxml: `apt-get install python-lxml`
+4. Install lxml: `apt-get install python-lxml` and `pip install lxml`.
 5. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
 
 <a name="instruction"></a>
