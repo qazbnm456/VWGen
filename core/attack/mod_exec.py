@@ -1,4 +1,4 @@
-from core.attack.attack import Attack, switch
+from VWGen.core.attack.attack import Attack, switch
 import os
 import re
 import sys

@@ -24,7 +24,8 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
 <a name="releases"></a>
 ## Releases
 
-- v0.1 -- Initial release
+- 0.1.0 -- Initial release
+- 0.2.0 -- Now, VWGen can also be one of [Tsaotun](https://github.com/qazbnm456/tsaotun)'s addon. :tada:
 
 <a name="status"></a>
 ## Status quo

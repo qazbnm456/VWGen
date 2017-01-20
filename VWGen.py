@@ -3,15 +3,15 @@
 
 import os
 import re
-import sys
 import optparse
+import imp
 import web
 from blessed import Terminal
 from docker.errors import APIError
+from tsaotun.cli import Tsaotun
 from core.file.filePointer import filePointer
 from core.file.logger import Logger
 from core.shell.shellAgent import shellAgent
-from tsaotun.cli import Tsaotun
 
 try:
     import urlparse
@@ -70,12 +70,9 @@ def enter_shell(gen_instance):
             Logger.logError("Unreconized keyword!")
 
 
-parent_dir = os.path.abspath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), os.pardir))
-if os.path.exists(os.path.join(parent_dir, "demo")):
-    sys.path.append(parent_dir)
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 from demo.demo import Demo
-THEME_DIR = os.path.dirname(sys.modules['demo'].__file__)
+THEME_DIR = os.path.join(ROOT_DIR, 'demo')
 
 demo = Demo()  # testing for now
 
@@ -118,8 +115,10 @@ class VWGen(object):
             u"[INFO] " + "\t {0}".format(u", ".join(attack.modules)))
 
         for mod_name in attack.modules:
-            mod = __import__("core.attack." + mod_name,
-                             fromlist=attack.modules)
+            f, filename, description = imp.find_module(
+                mod_name, [os.path.join(ROOT_DIR, 'core', 'attack')])
+            mod = imp.load_module(
+                mod_name, f, filename, description)
             mod_instance = getattr(mod, mod_name)(self.fp)
 
             self.attacks.append(mod_instance)
@@ -451,49 +450,51 @@ class VWGen(object):
             web.dAgent.send("logs {0} -f".format(web.ctr))
 
 
-if __name__ == "__main__":
+def cli(options=None):
     try:
-        usage = "usage: %prog [options]"
-        p = optparse.OptionParser(usage=usage, version="VWGen v0.1")
-        p.add_option('--console', '-c',
-                     action="store_true", metavar='CONSOLE',
-                     help="enter console mode")
-        p.add_option('--backend',
-                     action="store", dest="backend", type="string", default="php", metavar='BACKEND',
-                     help="configure the backend (Default: php)")
-        p.add_option('--theme',
-                     action="store", dest="theme", type="string", default="startbootstrap-agency-1.0.6", metavar='THEME',
-                     help="configure the theme (Default: startbootstrap-agency-1.0.6)")
-        p.add_option('--expose',
-                     action="store", dest="expose", type="int", default=80, metavar='EXPOSE_PORT',
-                     help="configure the port of the host for container binding (Default: 80)")
-        p.add_option('--database', '--db',
-                     action="store", dest="dbms", type="string", default=None, metavar='DBMS',
-                     help="configure the dbms for container linking")
-        p.add_option('--modules',
-                     action="store", dest="modules", default="+unfilter", metavar='LIST',
-                     help="list of modules to load (Default: +unfilter)")
-        p.add_option('--color',
-                     action="store_true", dest="color",
-                     help="set terminal color")
-        p.add_option('--verbose', '-v',
-                     action="store_true", dest="verbosity", metavar='LEVEL',
-                     help="set verbosity level")
-        group = optparse.OptionGroup(
-            p, 'Under development', 'Following options are still in development!')
-        group.add_option('--file',
-                         action="store", dest="inputFile", type="string", default=None, metavar='FILENAME',
-                         help="specify the file that VWGen will gonna operate on")
-        p.add_option_group(group)
-        options, arguments = p.parse_args()
+        if options is None:
+            usage = "usage: %prog [options]"
+            p = optparse.OptionParser(usage=usage, version="VWGen v0.2.0")
+            p.add_option('--console', '-c',
+                         action="store_true", metavar='CONSOLE',
+                         help="enter console mode")
+            p.add_option('--backend',
+                         action="store", dest="backend", type="string", default="php", metavar='BACKEND',
+                         help="configure the backend (Default: php)")
+            p.add_option('--theme',
+                         action="store", dest="theme", type="string", default="startbootstrap-agency-1.0.6", metavar='THEME',
+                         help="configure the theme (Default: startbootstrap-agency-1.0.6)")
+            p.add_option('--expose',
+                         action="store", dest="expose", type="int", default=80, metavar='EXPOSE_PORT',
+                         help="configure the port of the host for container binding (Default: 80)")
+            p.add_option('--database', '--db',
+                         action="store", dest="dbms", type="string", default=None, metavar='DBMS',
+                         help="configure the dbms for container linking")
+            p.add_option('--modules',
+                         action="store", dest="modules", default="+unfilter", metavar='LIST',
+                         help="list of modules to load (Default: +unfilter)")
+            p.add_option('--color',
+                         action="store_true", dest="color",
+                         help="set terminal color")
+            p.add_option('--verbose', '-v',
+                         action="store_true", dest="verbosity", metavar='LEVEL',
+                         help="set verbosity level")
+            group = optparse.OptionGroup(
+                p, 'Under development', 'Following options are still in development!')
+            group.add_option('--file',
+                             action="store", dest="inputFile", type="string", default=None, metavar='FILENAME',
+                             help="specify the file that VWGen will gonna operate on")
+            p.add_option_group(group)
+            options, _ = p.parse_args()
+            options = vars(options)
 
         gen = VWGen()
 
-        if options.console:
+        if options["console"]:
             enter_shell(gen)
         else:
-            if options.inputFile is not None:
-                web.fp.processInputFile(options.inputFile)
+            if options["inputFile"] is not None:
+                web.fp.processInputFile(options["inputFile"])
                 from core.customization.instanceSample import instanceSample
                 instance = instanceSample(gen)
                 instance.main()
@@ -513,23 +514,24 @@ if __name__ == "__main__":
                     web.fp.observer.stop()
                     web.fp.observer.join()
                     web.fp.rmtree(web.fp.path)
-                    web.dAgent.send("rm -f {0}".format(web.db_ctr))
+                    if web.db_ctr:
+                        web.dAgent.send("rm -f {0}".format(web.db_ctr))
                     web.dAgent.send("rm -f {0}".format(web.ctr))
 
                     web.fp.finishProcessInputFile()
                     raise SystemExit
 
-            if options.color:
+            if options["color"]:
                 gen.setColor()
 
-            if options.verbosity:
+            if options["verbosity"]:
                 gen.setVerbose()
 
-            gen.setBackend(options.backend)
-            gen.setDbms(options.dbms)
-            gen.setTheme(options.theme)
-            gen.setExpose(options.expose)
-            gen.setModules(options.modules)
+            gen.setBackend(options["backend"])
+            gen.setDbms(options["dbms"])
+            gen.setTheme(options["theme"])
+            gen.setExpose(options["expose"])
+            gen.setModules(options["modules"])
             gen.setThemeEnv()
 
             web.fp.observer.start()
@@ -545,10 +547,15 @@ if __name__ == "__main__":
                 web.fp.observer.stop()
                 web.fp.observer.join()
                 web.fp.rmtree(web.fp.path)
-                web.dAgent.send("rm -f {0}".format(web.db_ctr))
+                if web.db_ctr:
+                    web.dAgent.send("rm -f {0}".format(web.db_ctr))
                 web.dAgent.send("rm -f {0}".format(web.ctr))
     except (KeyboardInterrupt, SystemExit):
         pass
     except RuntimeError:
-        web.dAgent.send("rm -f {0}".format(web.db_ctr))
+        if web.db_ctr:
+            web.dAgent.send("rm -f {0}".format(web.db_ctr))
         web.dAgent.send("rm -f {0}".format(web.ctr))
+
+if __name__ == "__main__":
+    cli()
