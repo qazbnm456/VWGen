@@ -1,6 +1,8 @@
 """Configuration file for Vwgen addon"""
 
-from .Addon import placeholder # Vwgen class
+import textwrap
+
+from .Addon import placeholder  # Vwgen class
 
 __override__ = {
     'Addon.placeholder': 'Vwgen',
@@ -14,7 +16,9 @@ __argparse__ = [
         'actions': [
             "add_parser('{}',                                                  \
                          formatter_class=argparse.RawDescriptionHelpFormatter, \
-                         usage='%(prog)s [OPTIONS]')".format(__name__),
+                         usage='%(prog)s [OPTIONS]', description=textwrap.dedent('''\
+                         Vulnerable Web applications Generator\
+                         '''))".format(__name__),
             "add_argument('--console', '-c',    \
                            action='store_true', \
                            dest='v_console',      \

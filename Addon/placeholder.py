@@ -1,7 +1,7 @@
 """This module contains `tsaotun Vwgen` class"""
 
 from tsaotun.lib.Docker.Addon.command import Command
-from tsaotun.cli import cli as t_cli
+from tsaotun.cli import Tsaotun
 
 class Vwgen(Command):
     """This class implements `tsaotun Vwgen` command"""
@@ -21,11 +21,12 @@ class Vwgen(Command):
         del args["v_color"]
         del args["v_verbosity"]
 
-        t_cli('addon disable VWGen')
+        t_cli = Tsaotun()
+        t_cli.send('addon disable VWGen')
         from ..VWGen import cli as v_cli
         v_cli(args)
         self.settings[self.name] = ""
-        t_cli('addon enable VWGen')
+        t_cli.send('addon enable VWGen')
 
     def final(self):
         return self.settings[self.name]
