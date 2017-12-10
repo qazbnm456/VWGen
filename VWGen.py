@@ -248,7 +248,7 @@ class VWGen(object):
         web.container_name = '{0}_ctr'.format(self.dbms)
         if self.dbms is not None:
             if self.dbms == 'MySQL':
-                web.dAgent.send("run -d --name {0} -e MYSQL_ROOT_PASSWORD=root_password -e MYSQL_DATABASE=root_mysqls mysql".format(
+                web.dAgent.send("run -d --name {0} -e MYSQL_ROOT_PASSWORD=root_password -e MYSQL_DATABASE=root_mysql mysql".format(
                     web.container_name))
             elif self.dbms == 'Mongo':
                 web.db_ctr = web.dAgent.send(

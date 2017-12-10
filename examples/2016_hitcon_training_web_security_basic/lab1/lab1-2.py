@@ -56,7 +56,7 @@ class instanceSample(refObject):
 
         # レム ロングヘア
         s.setUrl(
-            'http://tr.twipple.jp/imgp/5e/500265.jpg')
+            'http://embed.pixiv.net/decorate.php?illust_id=57907953')
         self.fp.write(os.path.join(self.fp.path, "resource/Rem.jpg"),
                       s.perform(), ext=None)
 
@@ -79,5 +79,5 @@ class instanceSample(refObject):
 
 """
 Write up:
-    - http://127.0.0.1:8082//download.php?p=../flag.php
+    - http://127.0.0.1:8082///download.php?p=../flag.php
 """
