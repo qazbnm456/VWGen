@@ -1,4 +1,4 @@
-from VWGen.core.attack.attack import Attack, switch
+from core.attack.attack import Attack, switch
 import random
 import os
 import re

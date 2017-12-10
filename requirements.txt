@@ -3,7 +3,6 @@ web.py >= 0.40.dev0
 pycurl >= 7.43.0.1
 blessed >= 1.14.2
 BeautifulSoup >=3.2.1
-watchdog >= 0.8.3
 prompt-toolkit >= 1.0.15
 pygments >= 2.2.0
 lxml >= 4.1.1

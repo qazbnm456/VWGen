@@ -351,7 +351,6 @@ class VWGen(object):
             elif arg.startswith("start"):
                 gen.setThemeEnv()
 
-                self.fp.observer.start()
                 try:
                     self.start()
                 except (KeyboardInterrupt, SystemExit, RuntimeError):
@@ -361,14 +360,11 @@ class VWGen(object):
                     Logger.logInfo(
                         "\n[INFO] Taking you to safely leave the program.")
                 finally:
-                    self.fp.observer.stop()
-                    self.fp.observer.join()
                     self.fp.rmtree(self.fp.path)
                     web.dAgent.send("rm -f {0}".format(web.db_ctr))
                     web.dAgent.send("rm -f {0}".format(web.ctr))
 
                     gen.reset()
-                    self.fp.cleanObserver()
                 return True
             elif arg.startswith("CTRL+D"):
                 return "CTRL+D"
@@ -501,7 +497,6 @@ def cli(options=None):
                 web.fp.customizationClass = instanceSample
                 instance.gen_instance.setThemeEnv()
 
-                web.fp.observer.start()
                 try:
                     instance.gen_instance.start()
                 except (KeyboardInterrupt, SystemExit, RuntimeError):
@@ -511,8 +506,6 @@ def cli(options=None):
                     Logger.logInfo(
                         "\n[INFO] Taking you to safely leave the program.")
                 finally:
-                    web.fp.observer.stop()
-                    web.fp.observer.join()
                     web.fp.rmtree(web.fp.path)
                     if web.db_ctr:
                         web.dAgent.send("rm -f {0}".format(web.db_ctr))
@@ -534,7 +527,6 @@ def cli(options=None):
             gen.setModules(options["modules"])
             gen.setThemeEnv()
 
-            web.fp.observer.start()
             try:
                 gen.start()
             except (KeyboardInterrupt, SystemExit, RuntimeError):
@@ -544,8 +536,6 @@ def cli(options=None):
                 Logger.logInfo(
                     "\n[INFO] Taking you to safely leave the program.")
             finally:
-                web.fp.observer.stop()
-                web.fp.observer.join()
                 web.fp.rmtree(web.fp.path)
                 if web.db_ctr:
                     web.dAgent.send("rm -f {0}".format(web.db_ctr))

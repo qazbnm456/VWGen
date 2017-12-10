@@ -36,7 +36,7 @@ This is the Git repo of the `VWGen`, which stands for *Vulnerable Web applicatio
    - *expand* module learn the sites and try to rearrange the elements to let child modules insert their payloads within it.
 3. Only two themes right now.
     <div align="center"><img src="http://i.imgur.com/jgdO4HD.png" /></div>
-4. Python3 is currently not supported!
+4. **Python3 is currently not supported!**
 5. `--file` option works, but it still needs some developing. Example command: `./VWGen.py --file="$VWGen_HOME/examples/2016_ais3_web3/sample.py"`
 
 <a name="feature"></a>
@@ -49,18 +49,24 @@ There is a [examples/](https://github.com/qazbnm456/VWGen/tree/master/examples) 
 <a name="install"></a>
 ## Install
 
-1. Install docker binary. Only versions 1.11.0 above supported. Check out official [installing guide](https://docs.docker.com/linux/).
-2. Pull fundamental images that we gonna use with VWGen:
+1. Install docker binary. Only versions 1.11.0 above are supported. Check out official [installing guide](https://docs.docker.com/linux/).
+2. `sudo apt-get install -y libcurl4-gnutls-dev libcurl4-nss-dev libcurl4-openssl-dev` to make `pycurl` happy.
+3. Pull fundamental images that we gonna use with VWGen:
     - `docker pull richarvey/nginx-php-fpm:php5`
     - `docker pull richarvey/nginx-php-fpm:php7`
     - `docker pull mysql:5`
     - `docker pull phpmyadmin/phpmyadmin:4.6.5.1-1`
     - `docker pull node:7`
-3. Install lxml: `apt-get install python-lxml`.
-4. Install packages:
-    - `pip install -r requirements.txt`
-    - If you have error like `Could not run curl-config: [Errno 2] No such file or directory`, solve the problem with `apt-get install libcurl4-openssl-dev`.
-5. Clone [VWGen](https://github.com/qazbnm456/VWGen) and type `./VWGen.py --help` or check below for details.
+4. Install lxml: `apt-get install python-lxml`.
+5. Clone [VWGen](https://github.com/qazbnm456/VWGen) and `cd` to it.
+6. Install packages:
+    1. Through `pip`
+        - `pip install -r requirements.txt`
+    2. Through `pipenv`
+        - `pip install pipenv`
+        - `pipenv install`
+        - `pipenv shell` or `pipenv shell --fancy`
+7. Type `./VWGen.py --help` to test if it works or check below for more instructions.
 
 <a name="instruction"></a>
 ## Instruction

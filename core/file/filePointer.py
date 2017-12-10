@@ -1,17 +1,6 @@
 import os
 import shutil
 import zipfile
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-
-
-class ModifiedHandler(FileSystemEventHandler):
-
-    def __init__(self, fp):
-        self.fp = fp
-
-    def on_modified(self, event):
-        self.fp.setLayers(self.fp.path)
 
 
 class filePointer(object):
@@ -29,13 +18,9 @@ class filePointer(object):
     layers = None
 
     def __init__(self, path=None, pointer=None, target="index.php"):
-        self.event_handler = ModifiedHandler(self)
-        self.observer = Observer()
         if path is not None:
             self.root = path[(path.rfind(os.sep) + 1):]
             self.setLayers(path)
-            self.observer.schedule(
-                self.event_handler, self.path, recursive=True)
         self.pointer = pointer
         self.target = target
 
@@ -116,12 +101,14 @@ class filePointer(object):
     @staticmethod
     def rmtree(path):
         """returns True if rmtree successfully, or False instead"""
-        try:
-            shutil.rmtree(path)
-        except OSError, e:
-            print(e)
-            return False
-        return True
+        if path is not None:
+            try:
+                shutil.rmtree(path)
+            except OSError, e:
+                print(e)
+                return False
+            return True
+        return False
 
     def zipExtract(self, themePath, dst):
         """returns True if zipExtract successfully, or False instead"""
@@ -132,8 +119,6 @@ class filePointer(object):
             ind = themePath.rfind(os.sep) + 1
             self.root = themePath[ind:]
             self.setLayers(os.path.join(dst, self.root))
-            self.observer.schedule(
-                self.event_handler, self.path, recursive=True)
         except zipfile.BadZipfile, e:
             print(e)
             return False
@@ -174,10 +159,6 @@ class filePointer(object):
                 raise RuntimeError
         else:
             return self.pointer
-
-    def cleanObserver(self):
-        self.observer.unschedule_all()
-        self.observer = Observer()
 
     def processInputFile(self, inputFile=None):
         if inputFile is not None:
