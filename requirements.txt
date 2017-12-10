@@ -1,4 +1,4 @@
-tsaotun >= 0.9.3
+tsaotun >= 0.9.4
 web.py >= 0.40.dev0
 pycurl >= 7.43.0.1
 blessed >= 1.14.2
